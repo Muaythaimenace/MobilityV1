@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>10-Week Strength & Mobility Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Hide scrollbar for clean horizontal scrolling */
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    body { font-family: system-ui, -apple-system, sans-serif; }
+  </style>
+</head>
+<body class="bg-neutral-900 text-neutral-100 min-h-screen pb-24">
+  <div class="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
+    
+    <!-- Header & Phase Selector -->
+    <div class="bg-neutral-800 border border-neutral-700 rounded-2xl p-6 shadow-xl">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div>
+          <h1 class="text-2xl font-bold text-white tracking-tight">10-Week Strength & Mobility</h1>
+          <p class="text-neutral-400 text-sm mt-1">Rebuild glutes, back, and hips for full splits.</p>
+        </div>
+        <div class="w-full md:w-64">
+          <label class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mb-1 block">Current Phase</label>
+          <select id="phase-selector" class="w-full bg-neutral-900 border border-neutral-700 text-white rounded-lg p-2.5 outline-none focus:border-blue-500 transition-colors cursor-pointer">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+      </div>
+      <div class="bg-blue-900/20 border border-blue-800/50 rounded-xl p-4 flex gap-3 items-start">
+        <svg class="w-5 h-5 text-blue-400 shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <p id="phase-description" class="text-sm text-blue-100 leading-relaxed"></p>
+      </div>
+    </div>
+
+    <!-- Timer Bar -->
+    <div class="sticky top-4 z-50 bg-neutral-800 border border-neutral-700 rounded-2xl p-4 shadow-2xl flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <svg id="timer-icon" class="w-6 h-6 text-neutral-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="timer-display" class="text-3xl font-mono font-bold tracking-wider w-24">0:00</span>
+      </div>
+      <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
+        <button onclick="startTimer(60)" class="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors">60s</button>
+        <button onclick="startTimer(90)" class="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors">90s</button>
+        <button onclick="startTimer(180)" class="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors">3m</button>
+        <div class="w-px h-8 bg-neutral-600 mx-2 self-center"></div>
+        <button id="toggle-timer-btn" onclick="toggleTimer()" class="p-2 rounded-lg transition-colors bg-green-500/20 text-green-400 hover:bg-green-500/30">
+          <svg id="play-icon" class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <svg id="pause-icon" class="w-5 h-5 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        </button>
+        <button onclick="resetTimer()" class="p-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg transition-colors text-neutral-300">
+          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Navigation Tabs -->
+    <div id="category-tabs" class="flex overflow-x-auto gap-2 hide-scrollbar pb-2"></div>
+
+    <!-- Sub-Day Navigation -->
+    <div id="day-tabs" class="flex overflow-x-auto gap-2 hide-scrollbar pb-2"></div>
+
+    <!-- Progress Bar -->
+    <div class="bg-neutral-800 border border-neutral-700 rounded-2xl p-5 shadow-lg">
+      <div class="flex justify-between items-end mb-3">
+        <div>
+          <h2 id="current-day-title" class="text-xl font-bold text-white"></h2>
+          <p id="progress-text" class="text-neutral-400 text-sm mt-1">0 of 0 sets completed</p>
+        </div>
+        <span id="done-badge" class="hidden items-center gap-1 text-green-400 text-sm font-bold animate-pulse">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> DONE
+        </span>
+      </div>
+      <div class="h-4 bg-neutral-900 rounded-full overflow-hidden relative border border-neutral-700">
+        <div id="progress-bar" class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-500 ease-out rounded-full" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <!-- Exercise List -->
+    <div id="exercise-list" class="space-y-4"></div>
+    
+    <!-- Reset Checkboxes -->
+    <div id="reset-day-container" class="pt-6 flex justify-center hidden">
+      <button onclick="resetCurrentDay()" class="text-neutral-500 hover:text-red-400 text-sm font-semibold flex items-center gap-2 transition-colors">
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset checkboxes for this day
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    const phases = [
+      { id: 'p1', name: 'Weeks 1-3: Adaptation', desc: 'Use 10-20lb KB. 3-second negative (lowering) on every rep. Focus on tendon health.' },
+      { id: 'p2', name: 'Weeks 4-6: Overload', desc: 'Introduce Barbell/45lb KB. Push reps to the higher end. Focus on muscle density.' },
+      { id: 'p3', name: 'Weeks 7-8: Deep Range', desc: 'Add 10lb KB to ATG/Cossack squats. Elevate foot on split squats. Hold stretches 3 mins.' },
+      { id: 'p4', name: 'Weeks 9-10: Peak Output', desc: 'Heaviest safe weights. Actively pull yourself into deep splits during stretching.' }
+    ];
+
+    const categoriesList = ["Main Plan", "Recovery", "Stretching", "ATG"];
+
+    const workoutData = {
+      "Main Plan": {
+        p1: {
+          "Day 1: Hips & Glutes": [
+            { name: "Banded Glute Bridges", sets: 4, reps: "15-20", notes: "Short band above knees. Drive knees out, squeeze hard.", advanced: "Use thickest band, 3-sec pause at the top of every rep." },
+            { name: "Res Band Hip Flexor Marches", sets: 4, reps: "12 / leg", notes: "Anchor long band low. Drive knee to chest.", advanced: "Heaviest band, snap knee up explosively and hold 1 sec." },
+            { name: "20lb KB Goblet Squats", sets: 4, reps: "10-12", notes: "Squat shoes on. Sink as deep as hips allow pain-free.", advanced: "45lb KB with a 5-second slow lowering phase." },
+            { name: "Roman Chair Glute Extensions", sets: 4, reps: "12", notes: "Upper back rounded, toes out 45°. Lift using glutes only.", advanced: "Hold a 10lb or 25lb plate across your chest." }
+          ],
+          "Day 2: Back & Knees": [
+            { name: "45lb KB RDLs", sets: 4, reps: "10", notes: "3-second slow negative. Deep hamstring stretch.", advanced: "Upgrade to 135lb Barbell with perfect form." },
+            { name: "Terminal Knee Extensions (TKEs)", sets: 4, reps: "20 / leg", notes: "Long band behind knee. Repeatedly straighten to pump blood.", advanced: "Use thickest band, aggressive quad flex at lockout." },
+            { name: "Pull-up Negatives", sets: 4, reps: "5-8", notes: "Jump up, slowly lower yourself over 3-5 seconds.", advanced: "Strict unassisted pull-ups for 10 reps." },
+            { name: "Banded Hamstring Curls", sets: 4, reps: "15", notes: "Anchor long band, lie face down on bench, curl to glutes.", advanced: "Hold a 10lb dumbbell between your feet." }
+          ],
+          "Day 3: Deep Mobility": [
+            { name: "45lb KB Hip Thrusts", sets: 4, reps: "12", notes: "Upper back on bench. Squeeze at the top.", advanced: "Barbell loaded with 135lbs, 2-sec hold at top." },
+            { name: "10lb KB Cossack Squats", sets: 4, reps: "6-8 / side", notes: "Deep side lunge. Keep other leg straight.", advanced: "20lb KB, sink until hamstring rests on calf." },
+            { name: "Bodyweight Bulgarian Split Squats", sets: 4, reps: "8-10 / leg", notes: "Back foot elevated on bench.", advanced: "Hold 20lb dumbbells in each hand." },
+            { name: "Seated Good Mornings (Empty Bar)", sets: 4, reps: "10", notes: "Sit on bench. Hinge forward at hips.", advanced: "Add 10lb plates per side, chest touches bench." }
+          ],
+          "Day 4: Core & Posterior": [
+            { name: "20lb KB Single-Leg Deadlifts", sets: 4, reps: "8 / leg", notes: "Balance and glute activation on the planted leg.", advanced: "45lb KB, perfect balance without tapping down." },
+            { name: "Roman Chair Back Extensions", sets: 4, reps: "10", notes: "Neutral spine. Hinge at hips, use erectors to lift.", advanced: "Hold a 25lb plate behind your head." },
+            { name: "45lb KB Suitcase Carries", sets: 4, reps: "40s / side", notes: "Heavy KB one hand. Walk. Forces core stability.", advanced: "70lb Kettlebell or heavy dumbbell, zero torso lean." },
+            { name: "Assisted Reverse Nordic Curls", sets: 4, reps: "6-8", notes: "Kneel, hold long band in front for support, lean back.", advanced: "Unassisted, leaning back until shoulders hover 6 inches off floor." }
+          ]
+        },
+        p2: {
+          "Day 1: Hips & Glutes": [
+            { name: "Barbell Hip Thrusts", sets: 4, reps: "8-10", notes: "Load up the barbell. Explosive up, control down.", advanced: "225lbs+, explosive concentric, 3-sec lowering." },
+            { name: "Weighted Knee Raises", sets: 4, reps: "10 / leg", notes: "Hold DB between feet or use heavy band.", advanced: "Hang from pull-up bar, strict straight leg raises to bar." },
+            { name: "Barbell Back Squats", sets: 4, reps: "8-10", notes: "Squat shoes on. Add weight, hit depth safely.", advanced: "Bodyweight on the bar, deep ATG depth." },
+            { name: "Weighted Glute Extensions", sets: 4, reps: "10", notes: "Hold 10lb KB to chest on Roman Chair.", advanced: "45lb plate held across chest." }
+          ],
+          "Day 2: Back & Knees": [
+            { name: "Barbell RDLs", sets: 4, reps: "8", notes: "Increase weight. Maintain perfect straight back.", advanced: "Bodyweight on the bar, deep stretch without rounding." },
+            { name: "Weighted Step-Ups", sets: 4, reps: "10 / leg", notes: "Hold DB/KBs. Step onto bench.", advanced: "Hold 45lb KBs, controlled 3-sec descent." },
+            { name: "Pull-ups (Standard)", sets: 4, reps: "Near Failure", notes: "Full range of motion, from a dead hang.", advanced: "Weighted pull-ups with a 25lb plate." },
+            { name: "Nordic Hamstring Eccentrics", sets: 4, reps: "5", notes: "Anchor feet under loaded barbell. Lower slowly.", advanced: "Control the descent all the way to the floor with no hand catch." }
+          ],
+          "Day 3: Deep Mobility": [
+            { name: "Heavy Goblet Squats", sets: 4, reps: "10", notes: "45lb KB. Push range of motion deeper.", advanced: "70lb KB, pause for 2 seconds at the absolute bottom." },
+            { name: "20lb KB Cossack Squats", sets: 4, reps: "6 / side", notes: "Add weight. Keep heel of bent leg flat.", advanced: "45lb KB, smooth transitions side-to-side without standing up." },
+            { name: "Barbell Bulgarian Split Squats", sets: 4, reps: "8 / leg", notes: "Use empty bar or add plates if comfortable.", advanced: "95lbs on the bar, deep stretch." },
+            { name: "Seated Barbell Good Mornings", sets: 4, reps: "8-10", notes: "Add light plates. Arch lower back.", advanced: "95lbs on the bar, maintain arch." }
+          ],
+          "Day 4: Core & Posterior": [
+            { name: "Barbell Stiff-Leg Deadlifts", sets: 4, reps: "8", notes: "Like RDLs but legs straighter. Lighter weight.", advanced: "Standing on a 2-inch deficit block for max stretch." },
+            { name: "Weighted Back Extensions", sets: 4, reps: "10", notes: "Hold 10lb or 20lb KB on Roman Chair.", advanced: "45lb plate or 50lb dumbbell." },
+            { name: "Heavy Farmer's Carry", sets: 4, reps: "40s", notes: "45lb KB in one hand, heavy DB in the other.", advanced: "70lb KBs in both hands, 60 seconds." },
+            { name: "Unassisted Reverse Nordics", sets: 4, reps: "6-8", notes: "No band. Go as far back as quads can handle.", advanced: "Shoulders softly touch the floor and pull back up." }
+          ]
+        },
+        p3: {
+          "Day 1: Hips & Glutes": [
+            { name: "Deficit Reverse Lunges", sets: 4, reps: "10 / leg", notes: "Stand on a plate. Step back and drop knee deep.", advanced: "Barbell on back, 4-inch deficit block." },
+            { name: "Banded Psoas Holds", sets: 4, reps: "30s / leg", notes: "Drive knee up against band and hold.", advanced: "Attach kettlebell to foot via monkey foot/strap." },
+            { name: "ATG Goblet Squats", sets: 4, reps: "12", notes: "45lb KB. Squat shoes. Hamstrings touch calves.", advanced: "Elevate heels on slant board, 70lb KB." },
+            { name: "Single-Leg Glute Bridges", sets: 4, reps: "10 / leg", notes: "Foot elevated on bench. Drive hips up.", advanced: "Shoulders on bench, 45lb plate on working hip." }
+          ],
+          "Day 2: Back & Knees": [
+            { name: "Deficit Barbell RDLs", sets: 4, reps: "8", notes: "Stand on a weight plate for extra stretch at bottom.", advanced: "Stand on 45lb plate, bar touches toes." },
+            { name: "Poliquin Step-Ups", sets: 4, reps: "12 / leg", notes: "Heel elevated. Target the VMO (teardrop quad muscle).", advanced: "Hold 50% bodyweight, 6-inch step height." },
+            { name: "Wide-Grip Pull-ups", sets: 4, reps: "Near Failure", notes: "Wider grip to target lats and teres major.", advanced: "Chest touches the bar on every rep." },
+            { name: "Slider Hamstring Curls", sets: 4, reps: "12", notes: "Use socks on smooth floor or towels. Curl heels to glutes.", advanced: "Single-leg slider curls." }
+          ],
+          "Day 3: Deep Mobility": [
+            { name: "Single-Leg Hip Thrusts", sets: 4, reps: "10 / leg", notes: "Shoulders on bench. Bodyweight or 10lb KB.", advanced: "Hold 45lb plate on the working hip." },
+            { name: "Deficit Cossack Squats", sets: 4, reps: "6 / side", notes: "Working foot on a weight plate for deeper stretch.", advanced: "45lb KB, working foot elevated 2 inches." },
+            { name: "Front-Foot Elevated Split Squats", sets: 4, reps: "8 / leg", notes: "Front foot on a plate. Massive hip flexor stretch.", advanced: "Barbell loaded, massive trailing hip stretch." },
+            { name: "Jefferson Curls", sets: 4, reps: "10", notes: "Empty barbell. Round spine vertebra by vertebra. Light weight!", advanced: "60lb KB, stand on box, wrists go below toes." }
+          ],
+          "Day 4: Core & Posterior": [
+            { name: "B-Stance Barbell RDLs", sets: 4, reps: "8 / leg", notes: "Kickstand one foot back for balance, isolate front leg.", advanced: "135lbs+, pure isolation on the front hamstring." },
+            { name: "Superman Holds", sets: 4, reps: "30s", notes: "Lie on stomach, lift arms and legs. Hold and squeeze.", advanced: "Hold light plates in hands, 60s continuous." },
+            { name: "Overhead KB Carry", sets: 4, reps: "30s / side", notes: "20lb KB locked out overhead. Walk. Ultimate core brace.", advanced: "45lb KB, perfect shoulder alignment." },
+            { name: "Deep Reverse Nordics", sets: 4, reps: "6", notes: "Hold 10lb KB to chest. Lean back into extreme stretch.", advanced: "Hold 25lb plate to chest, full range to floor." }
+          ]
+        },
+        p4: {
+          "Day 1: Hips & Glutes": [
+            { name: "Heavy Barbell Squats", sets: 4, reps: "5-8", notes: "Heaviest weight. Full range of motion.", advanced: "1.5x Bodyweight, full ATG depth." },
+            { name: "Hanging Leg Raises", sets: 4, reps: "10", notes: "Hang from pullup bar. Bring toes as high as possible.", advanced: "Strict toes-to-bar with zero swinging." },
+            { name: "Middle Split Isometrics", sets: 4, reps: "30s", notes: "Slide out into middle split. Squeeze floor to flex groins.", advanced: "Hold dumbbells, lift self off floor using only inner thighs." },
+            { name: "Heavy Roman Chair Glute Ext", sets: 4, reps: "10", notes: "Hold 20lb or 45lb KB. Glutes doing all the work.", advanced: "Hold 70lb KB or barbell across back." }
+          ],
+          "Day 2: Back & Knees": [
+            { name: "Heavy Barbell RDLs", sets: 4, reps: "5-8", notes: "Max weight with perfect neutral spine.", advanced: "1.5x Bodyweight, flawless flat back." },
+            { name: "Front Squats (Barbell)", sets: 4, reps: "8", notes: "Rest bar on front delts. Incredibly demanding on core/quads.", advanced: "Bodyweight on the bar, upright torso." },
+            { name: "Weighted Pull-ups", sets: 4, reps: "5-8", notes: "Hold DB between feet. Pure upper body power.", advanced: "45lb plate attached to dip belt." },
+            { name: "Nordic Hamstring Curls", sets: 4, reps: "5", notes: "Try to control the descent all the way to the floor.", advanced: "Full unassisted concentric (pulling yourself back up)." }
+          ],
+          "Day 3: Deep Mobility": [
+            { name: "Heavy Barbell Hip Thrusts", sets: 4, reps: "6-8", notes: "Max weight. 2-second hold at the top.", advanced: "2x Bodyweight, 3-sec pause at lockout." },
+            { name: "45lb KB Cossack Squats", sets: 4, reps: "6 / side", notes: "Heaviest weight. Sink into the absolute bottom.", advanced: "Barbell Cossack squats, 95lbs." },
+            { name: "Heavy DB Bulgarian Split Squats", sets: 4, reps: "8 / leg", notes: "Max depth. Let the back knee hover over floor.", advanced: "2x 50lb+ DBs, 3-second pause at bottom." },
+            { name: "Front Split Isometrics", sets: 4, reps: "30s / side", notes: "Use rack for support. Actively pull into front split.", advanced: "Zero hand support, actively lifting bodyweight with legs." }
+          ],
+          "Day 4: Core & Posterior": [
+            { name: "Heavy Single-Leg KB DL", sets: 4, reps: "6 / leg", notes: "Use 45lb KB. Impeccable balance.", advanced: "70lb KB, or dual 45lb KBs." },
+            { name: "Heavy Roman Chair Back Ext", sets: 4, reps: "8", notes: "Hold 45lb KB. Smooth, controlled reps.", advanced: "Barbell held on back (Good morning style)." },
+            { name: "Zercher Carries", sets: 4, reps: "40s", notes: "Hold loaded barbell in the crooks of your elbows. Walk.", advanced: "Heavy loaded barbell, 60s unbroken walk." },
+            { name: "Advanced Reverse Nordics", sets: 4, reps: "5", notes: "Try to touch your shoulders to the floor behind you.", advanced: "Hold 45lb plate, full range." }
+          ]
+        }
+      },
+      "Recovery": {
+        "Jobsite Swap-In": [
+          { name: "Dead Hangs", sets: 4, reps: "30-45s", notes: "Total spinal decompression after laying stone. Breathe deep.", advanced: "Single-arm hangs, 30s per side." },
+          { name: "Elevated ATG Split Squats", sets: 4, reps: "5 / leg", notes: "Zero weight. Front foot on bench. Stretch back hip flexor safely.", advanced: "Hold 10lb DBs to assist balance and stretch." },
+          { name: "Banded Clamshells", sets: 4, reps: "15 / side", notes: "Isolates glute medius for stability without loading spine.", advanced: "Add 10lb DB resting on top knee." },
+          { name: "90/90 Hip Transfers", sets: 4, reps: "10 trans.", notes: "Sit on floor, knees at 90. Pivot on heels to flip sides.", advanced: "Zero hand support, staying perfectly upright." }
+        ]
+      },
+      "Stretching": {
+        "Hips & Groin": [
+          { name: "The Couch Stretch", sets: 1, reps: "2-3 mins / leg", notes: "Knee on floor, foot up on bench behind you. Tuck pelvis to target hip flexor.", advanced: "Back flat against wall, glute actively squeezing." },
+          { name: "Deep Pancake Stretch", sets: 1, reps: "3 mins", notes: "Wide straddle on floor. Hinge forward, reach out. Great for splits prep.", advanced: "Chest completely flat on the floor." },
+          { name: "Frog/Butterfly Stretch", sets: 1, reps: "2 mins", notes: "Soles of feet together, gently press knees down. Opens the adductors.", advanced: "Knees pinned to floor, chest to feet." },
+          { name: "Kneeling Lunge Iso-Hold", sets: 1, reps: "2 mins / leg", notes: "Push hips forward and hold. Do not arch lower back excessively.", advanced: "Actively pull front heel and back knee together." }
+        ],
+        "Glutes & IT Band": [
+          { name: "Pigeon Pose", sets: 1, reps: "3 mins / leg", notes: "Knee crossed in front on floor. Sink hips down and back to open deep glute.", advanced: "Front shin perfectly parallel to shoulders, chest on floor." },
+          { name: "90/90 Stretch", sets: 1, reps: "2 mins / leg", notes: "Sit with front and back legs at 90 deg. Lean over front shin.", advanced: "Actively lift front foot off the floor (passive-to-active)." },
+          { name: "Supine Figure 4", sets: 1, reps: "2 mins / leg", notes: "Lie on back, cross one ankle over opposite knee, pull thigh to chest.", advanced: "Pull knee all the way to chest, opposite leg straight." },
+          { name: "Seated IT Band Twist", sets: 1, reps: "2 mins / side", notes: "Cross leg over straight leg, hug knee to chest and twist torso.", advanced: "Hook elbow completely outside knee, tall spine." }
+        ],
+        "Lower Back & Spine": [
+          { name: "Cat-Cow Flow", sets: 1, reps: "2 mins", notes: "On all fours, slowly alternate arching and rounding your spine.", advanced: "Focus on articulating one single vertebra at a time." },
+          { name: "Child's Pose w/ Lat Stretch", sets: 1, reps: "2 mins", notes: "Sit back on heels. Walk hands to the left, then right, holding each for lat/QL stretch.", advanced: "Reach far enough to lift armpit off the ground." },
+          { name: "Supine Spinal Twist", sets: 1, reps: "2 mins / side", notes: "Lie on back, bring one knee across body to floor. Keep opposite shoulder down.", advanced: "Both shoulder blades pinned flat, knee touches floor." },
+          { name: "Sphinx / Cobra Pose", sets: 1, reps: "1-2 mins", notes: "Lie on stomach, press chest up gently. Decompresses lower back.", advanced: "Full upward dog, hips staying down, deep abdominal stretch." }
+        ],
+        "Calves & Ankles": [
+          { name: "Banded Calf Stretch", sets: 1, reps: "2 mins / leg", notes: "Band around ball of foot, leg straight, pull toes to shin.", advanced: "Use thickest band, actively flex quad to straighten knee." },
+          { name: "Wall Soleus Stretch (Bent Knee)", sets: 1, reps: "2 mins / leg", notes: "Calf stretch against wall but bend the back knee to target the lower soleus.", advanced: "Knee touches wall while foot is 5+ inches away." },
+          { name: "Kneeling Ankle Dorsiflexion", sets: 1, reps: "2 mins / leg", notes: "Kneeling, put weight on front knee over toes to stretch Achilles/ankle capsule.", advanced: "Place 45lb plate on knee to force deeper stretch." },
+          { name: "Deep Squat Hold (KB Assisted)", sets: 1, reps: "2 mins", notes: "Hold 10lb or 20lb KB as counterweight. Sit in deepest squat possible, shifting weight into ankles.", advanced: "Bodyweight only, feet entirely straight, 5 min hold." }
+        ]
+      },
+      "ATG": {
+        "Knees Over Toes": [
+          { name: "ATG Split Squats", sets: 4, reps: "5 / leg", notes: "Squat shoes on. Flat ground. Max forward knee travel. Back leg straight.", advanced: "Hold 50% of your bodyweight in dumbbells." },
+          { name: "Tibialis Raises", sets: 3, reps: "25", notes: "Lean back on wall, legs straight, lift toes. Protects knees.", advanced: "Single-leg tibialis raises or use a Tib-Bar." },
+          { name: "Elephant Walks", sets: 3, reps: "15 / leg", notes: "Bend over, grab toes. Alternate straightening legs to stretch hams.", advanced: "Palms flat on the floor, legs fully locking out." },
+          { name: "Poliquin Step-Ups", sets: 3, reps: "15 / leg", notes: "Elevate heel. Lower opposite foot to floor by bending working knee.", advanced: "Hold heavy dumbbells, completely controlled touch." },
+          { name: "Nordic Hamstring Curls", sets: 3, reps: "5", notes: "Anchor heels under heavy barbell. Lower body forward slowly.", advanced: "Full unassisted rep (lower to floor and pull back up)." }
+        ]
+      }
+    };
+
+    let activeCategory = "Main Plan";
+    let activePhaseId = "p1";
+    let activeSubDay = "Day 1: Hips & Glutes";
+    
+    let completedSets = {};
+    try {
+      const saved = localStorage.getItem('10WeekTrackerData');
+      if (saved) completedSets = JSON.parse(saved);
+    } catch (e) {
+      console.log("Local storage not available");
+    }
+
+    let timeLeft = 0;
+    let timerActive = false;
+    let timerInterval = null;
+
+    function init() {
+      const phaseSelector = document.getElementById('phase-selector');
+      phases.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.id;
+        option.textContent = p.name;
+        phaseSelector.appendChild(option);
+      });
+
+      phaseSelector.addEventListener('change', (e) => {
+        activePhaseId = e.target.value;
+        document.getElementById('phase-description').textContent = phases.find(p => p.id === activePhaseId).desc;
+        renderApp();
+      });
+      document.getElementById('phase-description').textContent = phases[0].desc;
+
+      renderCategories();
+      renderApp();
+    }
+
+    function renderCategories() {
+      const catContainer = document.getElementById('category-tabs');
+      catContainer.innerHTML = '';
+      categoriesList.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.onclick = () => {
+          activeCategory = cat;
+          const dataNode = activeCategory === "Main Plan" ? workoutData["Main Plan"][activePhaseId] : workoutData[activeCategory];
+          activeSubDay = Object.keys(dataNode)[0];
+          renderCategories();
+          renderApp();
+        };
+        btn.className = `px-5 py-3 rounded-xl font-bold whitespace-nowrap transition-all ${
+          activeCategory === cat 
+            ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
+            : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+        }`;
+        btn.textContent = cat;
+        catContainer.appendChild(btn);
+      });
+    }
+
+    function renderApp() {
+      const dataNode = activeCategory === "Main Plan" ? workoutData["Main Plan"][activePhaseId] : workoutData[activeCategory];
+      const days = Object.keys(dataNode);
+      
+      if (!days.includes(activeSubDay)) activeSubDay = days[0];
+
+      // Render Day Tabs
+      const dayContainer = document.getElementById('day-tabs');
+      dayContainer.innerHTML = '';
+      days.forEach(day => {
+        const btn = document.createElement('button');
+        btn.onclick = () => {
+          activeSubDay = day;
+          renderApp();
+        };
+        btn.className = `px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all ${
+          activeSubDay === day 
+            ? 'bg-neutral-100 text-neutral-900' 
+            : 'border border-neutral-700 text-neutral-400 hover:bg-neutral-800'
+        }`;
+        btn.textContent = day;
+        dayContainer.appendChild(btn);
+      });
+
+      document.getElementById('current-day-title').textContent = activeSubDay;
+
+      // Render Exercises
+      const exercises = dataNode[activeSubDay] || [];
+      const exContainer = document.getElementById('exercise-list');
+      exContainer.innerHTML = '';
+
+      exercises.forEach((ex, exIdx) => {
+        const div = document.createElement('div');
+        div.className = "bg-neutral-800 border border-neutral-700 rounded-2xl p-4 shadow-md hover:border-neutral-600 transition-colors";
+        
+        let checksHtml = '';
+        for (let i = 0; i < ex.sets; i++) {
+          const key = getTrackKey(ex.name, i);
+          const isChecked = completedSets[key];
+          
+          checksHtml += `
+            <button onclick="handleCheck('${ex.name}', ${i})" class="w-12 h-12 md:w-10 md:h-10 rounded-xl flex items-center justify-center transition-all transform active:scale-90 ${
+              isChecked 
+                ? 'bg-green-500/20 text-green-500 border-2 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' 
+                : 'bg-neutral-900 border border-neutral-600 text-neutral-600 hover:border-neutral-400'
+            }">
+              ${isChecked 
+                ? `<svg class="w-6 h-6 md:w-5 md:h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><polyline points="9 11 12 14 22 4"/></svg>` 
+                : `<svg class="w-6 h-6 md:w-5 md:h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>`}
+            </button>
+          `;
+        }
+
+        const advancedHtml = ex.advanced 
+          ? `<div class="mt-3 bg-blue-900/10 border border-blue-900/30 rounded-lg p-3">
+               <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider block mb-1">Advanced Standard Goal</span>
+               <p class="text-sm text-neutral-300">${ex.advanced}</p>
+             </div>`
+          : '';
+
+        // Generate dynamic placeholder and search URL
+        const encodedName = encodeURIComponent(ex.name.split(' ').slice(0, 3).join('\n'));
+        const placeholderUrl = `https://placehold.co/150x150/172554/60a5fa?text=${encodedName}`;
+        const searchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(ex.name + ' exercise proper form')}`;
+
+        div.innerHTML = `
+          <div class="flex flex-col md:flex-row justify-between gap-4">
+            
+            <!-- Dynamic Image & Form Reference -->
+            <div class="shrink-0 flex flex-col gap-2 w-full md:w-32">
+              <div class="w-full h-32 bg-neutral-900 rounded-xl overflow-hidden border border-neutral-700 flex items-center justify-center relative group shadow-inner">
+                 <img src="${placeholderUrl}" alt="${ex.name}" onerror="this.src='https://placehold.co/150x150/172554/60a5fa?text=Image'" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
+              </div>
+              <a href="${searchUrl}" target="_blank" class="text-[11px] font-semibold text-center text-blue-400 hover:text-blue-300 hover:underline flex items-center justify-center gap-1 bg-blue-950/30 py-1.5 rounded-lg border border-blue-900/50 transition-colors">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                View Form
+              </a>
+            </div>
+
+            <!-- Exercise Details -->
+            <div class="flex-1">
+              <h3 class="text-lg font-bold text-white mb-1">${ex.name}</h3>
+              <div class="flex items-center gap-3 mb-3">
+                <span class="inline-block px-2 py-1 bg-neutral-900 text-neutral-300 text-xs font-bold rounded">${ex.sets} Sets</span>
+                <span class="inline-block px-2 py-1 bg-neutral-900 text-blue-300 text-xs font-bold rounded">${ex.reps}</span>
+              </div>
+              <p class="text-sm text-neutral-400 leading-relaxed border-l-2 border-neutral-600 pl-3 mb-2"><strong class="text-neutral-300 font-semibold">Key Note:</strong> ${ex.notes}</p>
+              ${advancedHtml}
+            </div>
+
+            <!-- Checkboxes -->
+            <div class="flex flex-row md:flex-col gap-2 items-center justify-center md:justify-start md:w-auto w-full border-t md:border-t-0 md:border-l border-neutral-700 pt-4 md:pt-0 md:pl-4">
+              <span class="text-xs text-neutral-500 font-bold uppercase tracking-wider mb-1 hidden md:block">Track</span>
+              <div class="flex gap-3">${checksHtml}</div>
+            </div>
+          </div>
+        `;
+        exContainer.appendChild(div);
+      });
+
+      updateProgress();
+    }
+
+    function getTrackKey(exerciseName, setIndex) {
+      const phasePrefix = activeCategory === "Main Plan" ? activePhaseId : "static";
+      return `${activeCategory}-${phasePrefix}-${activeSubDay}-${exerciseName}-${setIndex}`;
+    }
+
+    function handleCheck(exerciseName, setIndex) {
+      const key = getTrackKey(exerciseName, setIndex);
+      if (completedSets[key]) {
+        delete completedSets[key];
+      } else {
+        completedSets[key] = true;
+      }
+      
+      try {
+        localStorage.setItem('10WeekTrackerData', JSON.stringify(completedSets));
+      } catch(e){}
+      
+      renderApp();
+    }
+
+    function updateProgress() {
+      const dataNode = activeCategory === "Main Plan" ? workoutData["Main Plan"][activePhaseId] : workoutData[activeCategory];
+      const exercises = dataNode[activeSubDay] || [];
+      
+      let totalSets = 0;
+      let completedSetsCount = 0;
+
+      exercises.forEach(ex => {
+        totalSets += ex.sets;
+        for (let i = 0; i < ex.sets; i++) {
+          if (completedSets[getTrackKey(ex.name, i)]) completedSetsCount++;
+        }
+      });
+
+      const progressPercent = totalSets === 0 ? 0 : Math.round((completedSetsCount / totalSets) * 100);
+      
+      document.getElementById('progress-text').textContent = `${completedSetsCount} of ${totalSets} sets completed`;
+      
+      const bar = document.getElementById('progress-bar');
+      bar.style.width = `${progressPercent}%`;
+      
+      if (progressPercent === 100 && totalSets > 0) {
+        bar.classList.replace('bg-blue-500', 'bg-green-500');
+        document.getElementById('done-badge').classList.remove('hidden');
+        document.getElementById('done-badge').classList.add('flex');
+      } else {
+        bar.classList.replace('bg-green-500', 'bg-blue-500');
+        document.getElementById('done-badge').classList.add('hidden');
+        document.getElementById('done-badge').classList.remove('flex');
+      }
+
+      const resetBtn = document.getElementById('reset-day-container');
+      if (completedSetsCount > 0) {
+        resetBtn.classList.remove('hidden');
+      } else {
+        resetBtn.classList.add('hidden');
+      }
+    }
+
+    function resetCurrentDay() {
+      if(confirm("Reset checkboxes for this day?")) {
+        const dataNode = activeCategory === "Main Plan" ? workoutData["Main Plan"][activePhaseId] : workoutData[activeCategory];
+        const exercises = dataNode[activeSubDay] || [];
+        
+        exercises.forEach(ex => {
+          for (let i = 0; i < ex.sets; i++) {
+            delete completedSets[getTrackKey(ex.name, i)];
+          }
+        });
+        
+        try {
+          localStorage.setItem('10WeekTrackerData', JSON.stringify(completedSets));
+        } catch(e){}
+        
+        renderApp();
+      }
+    }
+
+    // Timer Functions
+    function playBeep() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.value = 800;
+        gain.gain.setValueAtTime(1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 1.5);
+      } catch (e) { }
+    }
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    function updateTimerUI() {
+      document.getElementById('timer-display').textContent = formatTime(timeLeft);
+      const icon = document.getElementById('timer-icon');
+      
+      if (timeLeft > 0) {
+        icon.classList.add('text-amber-400', 'animate-pulse');
+        icon.classList.remove('text-neutral-400');
+      } else {
+        icon.classList.remove('text-amber-400', 'animate-pulse');
+        icon.classList.add('text-neutral-400');
+      }
+
+      const btn = document.getElementById('toggle-timer-btn');
+      const playIcon = document.getElementById('play-icon');
+      const pauseIcon = document.getElementById('pause-icon');
+
+      if (timerActive) {
+        btn.classList.replace('bg-green-500/20', 'bg-amber-500/20');
+        btn.classList.replace('text-green-400', 'text-amber-400');
+        btn.classList.replace('hover:bg-green-500/30', 'hover:bg-amber-500/30');
+        playIcon.classList.add('hidden');
+        pauseIcon.classList.remove('hidden');
+      } else {
+        btn.classList.replace('bg-amber-500/20', 'bg-green-500/20');
+        btn.classList.replace('text-amber-400', 'text-green-400');
+        btn.classList.replace('hover:bg-amber-500/30', 'hover:bg-green-500/30');
+        pauseIcon.classList.add('hidden');
+        playIcon.classList.remove('hidden');
+      }
+    }
+
+    function timerTick() {
+      if (timeLeft > 0) {
+        timeLeft--;
+        updateTimerUI();
+      } else if (timeLeft === 0 && timerActive) {
+        timerActive = false;
+        clearInterval(timerInterval);
+        playBeep();
+        updateTimerUI();
+      }
+    }
+
+    function startTimer(seconds) {
+      timerActive = false;
+      clearInterval(timerInterval);
+      timeLeft = seconds;
+      timerActive = true;
+      updateTimerUI();
+      timerInterval = setInterval(timerTick, 1000);
+    }
+
+    function toggleTimer() {
+      if (timerActive) {
+        timerActive = false;
+        clearInterval(timerInterval);
+      } else {
+        if (timeLeft > 0) {
+          timerActive = true;
+          timerInterval = setInterval(timerTick, 1000);
+        }
+      }
+      updateTimerUI();
+    }
+
+    function resetTimer() {
+      timerActive = false;
+      clearInterval(timerInterval);
+      timeLeft = 0;
+      updateTimerUI();
+    }
+
+    // Initialize the app on load
+    window.onload = init;
+  </script>
+</body>
+</html>
