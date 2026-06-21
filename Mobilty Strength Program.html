@@ -15,6 +15,7 @@
 <body class="bg-neutral-900 text-neutral-100 min-h-screen pb-24">
   <div class="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
     
+    <!-- Header & Phase Selector -->
     <div class="bg-neutral-800 border border-neutral-700 rounded-2xl p-6 shadow-xl">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
@@ -24,7 +25,8 @@
         <div class="w-full md:w-64">
           <label class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mb-1 block">Current Phase</label>
           <select id="phase-selector" class="w-full bg-neutral-900 border border-neutral-700 text-white rounded-lg p-2.5 outline-none focus:border-blue-500 transition-colors cursor-pointer">
-            </select>
+            <!-- Populated by JS -->
+          </select>
         </div>
       </div>
       <div class="bg-blue-900/20 border border-blue-800/50 rounded-xl p-4 flex gap-3 items-start">
@@ -33,6 +35,7 @@
       </div>
     </div>
 
+    <!-- Timer Bar -->
     <div class="sticky top-4 z-50 bg-neutral-800 border border-neutral-700 rounded-2xl p-4 shadow-2xl flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <svg id="timer-icon" class="w-6 h-6 text-neutral-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -53,10 +56,13 @@
       </div>
     </div>
 
+    <!-- Main Navigation Tabs -->
     <div id="category-tabs" class="flex overflow-x-auto gap-2 hide-scrollbar pb-2"></div>
 
+    <!-- Sub-Day Navigation -->
     <div id="day-tabs" class="flex overflow-x-auto gap-2 hide-scrollbar pb-2"></div>
 
+    <!-- Progress Bar -->
     <div class="bg-neutral-800 border border-neutral-700 rounded-2xl p-5 shadow-lg">
       <div class="flex justify-between items-end mb-3">
         <div>
@@ -72,8 +78,10 @@
       </div>
     </div>
 
+    <!-- Exercise List -->
     <div id="exercise-list" class="space-y-4"></div>
     
+    <!-- Reset Checkboxes -->
     <div id="reset-day-container" class="pt-6 flex justify-center hidden">
       <button onclick="resetCurrentDay()" class="text-neutral-500 hover:text-red-400 text-sm font-semibold flex items-center gap-2 transition-colors">
         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset checkboxes for this day
@@ -97,9 +105,9 @@
         p1: {
           "Day 1: Hips & Glutes": [
             { name: "Banded Glute Bridges", sets: 4, reps: "15-20", notes: "Short band above knees. Drive knees out, squeeze hard.", advanced: "Use thickest band, 3-sec pause at the top of every rep." },
-            { name: "Res Band Hip Flexor Marches", sets: 4, reps: "8 / leg", notes: "Use a light band. Focus purely on a slow, 3-second negative to eccentrically strengthen the strained tissue.", advanced: "Add a 2-second isometric pause at the top before the slow negative." },
-            { name: "20lb KB Goblet Squats", sets: 4, reps: "10-12", notes: "Squat shoes on. Sink as deep as hips allow pain-free. Controlled descent, immediately drive up.", advanced: "45lb KB with a 5-second slow lowering phase. No pausing at bottom." },
-            { name: "Copenhagen Adductor Planks", sets: 4, reps: "20s / side", notes: "Short-lever (knee on bench). Keeps tension strictly on the inner thighs.", advanced: "Add 10s to the hold time each week." }
+            { name: "Res Band Hip Flexor Marches", sets: 4, reps: "12 / leg", notes: "Anchor long band low. Drive knee to chest.", advanced: "Heaviest band, snap knee up explosively and hold 1 sec." },
+            { name: "20lb KB Goblet Squats", sets: 4, reps: "10-12", notes: "Squat shoes on. Sink as deep as hips allow pain-free.", advanced: "45lb KB with a 5-second slow lowering phase." },
+            { name: "Roman Chair Glute Extensions", sets: 4, reps: "12", notes: "Upper back rounded, toes out 45°. Lift using glutes only.", advanced: "Hold a 10lb or 25lb plate across your chest." }
           ],
           "Day 2: Back & Knees": [
             { name: "45lb KB RDLs", sets: 4, reps: "10", notes: "3-second slow negative. Deep hamstring stretch.", advanced: "Upgrade to 135lb Barbell with perfect form." },
@@ -109,7 +117,7 @@
           ],
           "Day 3: Deep Mobility": [
             { name: "45lb KB Hip Thrusts", sets: 4, reps: "12", notes: "Upper back on bench. Squeeze at the top.", advanced: "Barbell loaded with 135lbs, 2-sec hold at top." },
-            { name: "Slider Lateral Lunges", sets: 4, reps: "6-8 / side", notes: "Use sliders. Push straight leg out, pull back using only the adductor. No extreme knee flexion required.", advanced: "Hold a 20lb KB goblet style." },
+            { name: "10lb KB Cossack Squats", sets: 4, reps: "6-8 / side", notes: "Deep side lunge. Keep other leg straight.", advanced: "20lb KB, sink until hamstring rests on calf." },
             { name: "Bodyweight Bulgarian Split Squats", sets: 4, reps: "8-10 / leg", notes: "Back foot elevated on bench.", advanced: "Hold 20lb dumbbells in each hand." },
             { name: "Seated Good Mornings (Empty Bar)", sets: 4, reps: "10", notes: "Sit on bench. Hinge forward at hips.", advanced: "Add 10lb plates per side, chest touches bench." }
           ],
@@ -125,7 +133,7 @@
             { name: "Barbell Hip Thrusts", sets: 4, reps: "8-10", notes: "Load up the barbell. Explosive up, control down.", advanced: "225lbs+, explosive concentric, 3-sec lowering." },
             { name: "Weighted Knee Raises", sets: 4, reps: "10 / leg", notes: "Hold DB between feet or use heavy band.", advanced: "Hang from pull-up bar, strict straight leg raises to bar." },
             { name: "Barbell Back Squats", sets: 4, reps: "8-10", notes: "Squat shoes on. Add weight, hit depth safely.", advanced: "Bodyweight on the bar, deep ATG depth." },
-            { name: "Copenhagen Adductor Planks", sets: 4, reps: "20s / side", notes: "Long-lever (foot on bench). Ultimate adductor strength builder for middle splits.", advanced: "Hold a light dumbbell on your top hip." }
+            { name: "Weighted Glute Extensions", sets: 4, reps: "10", notes: "Hold 10lb KB to chest on Roman Chair.", advanced: "45lb plate held across chest." }
           ],
           "Day 2: Back & Knees": [
             { name: "Barbell RDLs", sets: 4, reps: "8", notes: "Increase weight. Maintain perfect straight back.", advanced: "Bodyweight on the bar, deep stretch without rounding." },
@@ -134,8 +142,8 @@
             { name: "Nordic Hamstring Eccentrics", sets: 4, reps: "5", notes: "Anchor feet under loaded barbell. Lower slowly.", advanced: "Control the descent all the way to the floor with no hand catch." }
           ],
           "Day 3: Deep Mobility": [
-            { name: "Heavy Goblet Squats", sets: 4, reps: "10", notes: "45lb KB. Push range of motion deeper. Controlled descent, immediately drive up.", advanced: "70lb KB. No pausing at the bottom to protect knees." },
-            { name: "Slider Lateral Lunges", sets: 4, reps: "6-8 / side", notes: "Use sliders. Push straight leg out, pull back using only the adductor. No extreme knee flexion required.", advanced: "Hold a 20lb KB goblet style." },
+            { name: "Heavy Goblet Squats", sets: 4, reps: "10", notes: "45lb KB. Push range of motion deeper.", advanced: "70lb KB, pause for 2 seconds at the absolute bottom." },
+            { name: "20lb KB Cossack Squats", sets: 4, reps: "6 / side", notes: "Add weight. Keep heel of bent leg flat.", advanced: "45lb KB, smooth transitions side-to-side without standing up." },
             { name: "Barbell Bulgarian Split Squats", sets: 4, reps: "8 / leg", notes: "Use empty bar or add plates if comfortable.", advanced: "95lbs on the bar, deep stretch." },
             { name: "Seated Barbell Good Mornings", sets: 4, reps: "8-10", notes: "Add light plates. Arch lower back.", advanced: "95lbs on the bar, maintain arch." }
           ],
@@ -154,14 +162,14 @@
             { name: "Single-Leg Glute Bridges", sets: 4, reps: "10 / leg", notes: "Foot elevated on bench. Drive hips up.", advanced: "Shoulders on bench, 45lb plate on working hip." }
           ],
           "Day 2: Back & Knees": [
-            { name: "Deficit Barbell RDLs", sets: 4, reps: "8", notes: "Stand on a weight plate for extra stretch at bottom. Maintain a strict 3-to-4-second descent.", advanced: "Stand on 45lb plate, bar touches toes." },
+            { name: "Deficit Barbell RDLs", sets: 4, reps: "8", notes: "Stand on a weight plate for extra stretch at bottom.", advanced: "Stand on 45lb plate, bar touches toes." },
             { name: "Poliquin Step-Ups", sets: 4, reps: "12 / leg", notes: "Heel elevated. Target the VMO (teardrop quad muscle).", advanced: "Hold 50% bodyweight, 6-inch step height." },
             { name: "Wide-Grip Pull-ups", sets: 4, reps: "Near Failure", notes: "Wider grip to target lats and teres major.", advanced: "Chest touches the bar on every rep." },
             { name: "Slider Hamstring Curls", sets: 4, reps: "12", notes: "Use socks on smooth floor or towels. Curl heels to glutes.", advanced: "Single-leg slider curls." }
           ],
           "Day 3: Deep Mobility": [
             { name: "Single-Leg Hip Thrusts", sets: 4, reps: "10 / leg", notes: "Shoulders on bench. Bodyweight or 10lb KB.", advanced: "Hold 45lb plate on the working hip." },
-            { name: "Slider Lateral Lunges", sets: 4, reps: "6-8 / side", notes: "Use sliders. Push straight leg out, pull back using only the adductor. No extreme knee flexion required.", advanced: "Hold a 20lb KB goblet style." },
+            { name: "Deficit Cossack Squats", sets: 4, reps: "6 / side", notes: "Working foot on a weight plate for deeper stretch.", advanced: "45lb KB, working foot elevated 2 inches." },
             { name: "Front-Foot Elevated Split Squats", sets: 4, reps: "8 / leg", notes: "Front foot on a plate. Massive hip flexor stretch.", advanced: "Barbell loaded, massive trailing hip stretch." },
             { name: "Jefferson Curls", sets: 4, reps: "10", notes: "Empty barbell. Round spine vertebra by vertebra. Light weight!", advanced: "60lb KB, stand on box, wrists go below toes." }
           ],
@@ -176,18 +184,18 @@
           "Day 1: Hips & Glutes": [
             { name: "Heavy Barbell Squats", sets: 4, reps: "5-8", notes: "Heaviest weight. Full range of motion.", advanced: "1.5x Bodyweight, full ATG depth." },
             { name: "Hanging Leg Raises", sets: 4, reps: "10", notes: "Hang from pullup bar. Bring toes as high as possible.", advanced: "Strict toes-to-bar with zero swinging." },
-            { name: "Middle Split Isometrics", sets: 4, reps: "30s", notes: "Slide out into middle split. Stay right at the edge of discomfort, actively press feet into floor.", advanced: "Hold dumbbells, lift self off floor using only inner thighs." },
+            { name: "Middle Split Isometrics", sets: 4, reps: "30s", notes: "Slide out into middle split. Squeeze floor to flex groins.", advanced: "Hold dumbbells, lift self off floor using only inner thighs." },
             { name: "Heavy Roman Chair Glute Ext", sets: 4, reps: "10", notes: "Hold 20lb or 45lb KB. Glutes doing all the work.", advanced: "Hold 70lb KB or barbell across back." }
           ],
           "Day 2: Back & Knees": [
-            { name: "Heavy Barbell RDLs", sets: 4, reps: "5-8", notes: "Max weight with perfect neutral spine. Maintain a strict 3-to-4-second descent.", advanced: "1.5x Bodyweight, flawless flat back." },
+            { name: "Heavy Barbell RDLs", sets: 4, reps: "5-8", notes: "Max weight with perfect neutral spine.", advanced: "1.5x Bodyweight, flawless flat back." },
             { name: "Front Squats (Barbell)", sets: 4, reps: "8", notes: "Rest bar on front delts. Incredibly demanding on core/quads.", advanced: "Bodyweight on the bar, upright torso." },
             { name: "Weighted Pull-ups", sets: 4, reps: "5-8", notes: "Hold DB between feet. Pure upper body power.", advanced: "45lb plate attached to dip belt." },
             { name: "Nordic Hamstring Curls", sets: 4, reps: "5", notes: "Try to control the descent all the way to the floor.", advanced: "Full unassisted concentric (pulling yourself back up)." }
           ],
           "Day 3: Deep Mobility": [
             { name: "Heavy Barbell Hip Thrusts", sets: 4, reps: "6-8", notes: "Max weight. 2-second hold at the top.", advanced: "2x Bodyweight, 3-sec pause at lockout." },
-            { name: "Heavy Slider Lateral Lunges", sets: 4, reps: "6 / side", notes: "Heaviest safe weight. Maximize the stretch on the straight leg.", advanced: "Hold a 45lb KB." },
+            { name: "45lb KB Cossack Squats", sets: 4, reps: "6 / side", notes: "Heaviest weight. Sink into the absolute bottom.", advanced: "Barbell Cossack squats, 95lbs." },
             { name: "Heavy DB Bulgarian Split Squats", sets: 4, reps: "8 / leg", notes: "Max depth. Let the back knee hover over floor.", advanced: "2x 50lb+ DBs, 3-second pause at bottom." },
             { name: "Front Split Isometrics", sets: 4, reps: "30s / side", notes: "Use rack for support. Actively pull into front split.", advanced: "Zero hand support, actively lifting bodyweight with legs." }
           ],
@@ -209,7 +217,7 @@
       },
       "Stretching": {
         "Hips & Groin": [
-          { name: "Active Couch Stretch", sets: 1, reps: "10-15 cycles / leg", notes: "Contract-relax method. Squeeze glute hard for 5s to push hip forward, then relax. Do not over-stretch the strain.", advanced: "Perform without wall support, actively balancing." },
+          { name: "The Couch Stretch", sets: 1, reps: "2-3 mins / leg", notes: "Knee on floor, foot up on bench behind you. Tuck pelvis to target hip flexor.", advanced: "Back flat against wall, glute actively squeezing." },
           { name: "Deep Pancake Stretch", sets: 1, reps: "3 mins", notes: "Wide straddle on floor. Hinge forward, reach out. Great for splits prep.", advanced: "Chest completely flat on the floor." },
           { name: "Frog/Butterfly Stretch", sets: 1, reps: "2 mins", notes: "Soles of feet together, gently press knees down. Opens the adductors.", advanced: "Knees pinned to floor, chest to feet." },
           { name: "Kneeling Lunge Iso-Hold", sets: 1, reps: "2 mins / leg", notes: "Push hips forward and hold. Do not arch lower back excessively.", advanced: "Actively pull front heel and back knee together." }
@@ -230,7 +238,7 @@
           { name: "Banded Calf Stretch", sets: 1, reps: "2 mins / leg", notes: "Band around ball of foot, leg straight, pull toes to shin.", advanced: "Use thickest band, actively flex quad to straighten knee." },
           { name: "Wall Soleus Stretch (Bent Knee)", sets: 1, reps: "2 mins / leg", notes: "Calf stretch against wall but bend the back knee to target the lower soleus.", advanced: "Knee touches wall while foot is 5+ inches away." },
           { name: "Kneeling Ankle Dorsiflexion", sets: 1, reps: "2 mins / leg", notes: "Kneeling, put weight on front knee over toes to stretch Achilles/ankle capsule.", advanced: "Place 45lb plate on knee to force deeper stretch." },
-          { name: "Resisted Backward Walking", sets: 1, reps: "3-5 mins", notes: "Use sled or heavy resistance band. Lean back, pump blood into the VMO. Great for knee health without deep flexion.", advanced: "Increase resistance to a heavy sled drag." }
+          { name: "Deep Squat Hold (KB Assisted)", sets: 1, reps: "2 mins", notes: "Hold 10lb or 20lb KB as counterweight. Sit in deepest squat possible, shifting weight into ankles.", advanced: "Bodyweight only, feet entirely straight, 5 min hold." }
         ]
       },
       "ATG": {
@@ -370,6 +378,7 @@
         div.innerHTML = `
           <div class="flex flex-col md:flex-row justify-between gap-4">
             
+            <!-- Dynamic Image & Form Reference -->
             <div class="shrink-0 flex flex-col gap-2 w-full md:w-32">
               <div class="w-full h-32 bg-neutral-900 rounded-xl overflow-hidden border border-neutral-700 flex items-center justify-center relative group shadow-inner">
                  <img src="${placeholderUrl}" alt="${ex.name}" onerror="this.src='https://placehold.co/150x150/172554/60a5fa?text=Image'" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
@@ -380,6 +389,7 @@
               </a>
             </div>
 
+            <!-- Exercise Details -->
             <div class="flex-1">
               <h3 class="text-lg font-bold text-white mb-1">${ex.name}</h3>
               <div class="flex items-center gap-3 mb-3">
@@ -390,6 +400,7 @@
               ${advancedHtml}
             </div>
 
+            <!-- Checkboxes -->
             <div class="flex flex-row md:flex-col gap-2 items-center justify-center md:justify-start md:w-auto w-full border-t md:border-t-0 md:border-l border-neutral-700 pt-4 md:pt-0 md:pl-4">
               <span class="text-xs text-neutral-500 font-bold uppercase tracking-wider mb-1 hidden md:block">Track</span>
               <div class="flex gap-3">${checksHtml}</div>
