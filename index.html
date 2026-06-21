@@ -59,7 +59,7 @@
     <div class="bg-neutral-800 border border-neutral-700 rounded-2xl p-5 shadow-lg my-4">
       <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
         <svg class="w-5 h-5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M14 14V7"/><path d="M10 14v-4"/><path d="M6 14v-2"/><path d="M18 14v-6"/></svg>
-        Total Volume Completed (Sets)
+        Daily Volume Completed (Sets)
       </h3>
       <div id="volume-stats" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2"></div>
     </div>
@@ -83,10 +83,19 @@
 
     <div id="exercise-list" class="space-y-4"></div>
     
-    <div id="reset-day-container" class="pt-6 flex justify-center hidden">
+    <div id="reset-day-container" class="pt-6 flex flex-col items-center gap-4">
       <button onclick="resetCurrentDay()" class="text-neutral-500 hover:text-red-400 text-sm font-semibold flex items-center gap-2 transition-colors">
         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset checkboxes for this day
       </button>
+
+      <div class="flex gap-3 border-t border-neutral-800 pt-4 w-full justify-center">
+        <button onclick="exportProgressData()" class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-xs font-bold text-neutral-400 flex items-center gap-1.5 transition-colors">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Progress
+        </button>
+        <button onclick="importProgressData()" class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-xs font-bold text-neutral-400 flex items-center gap-1.5 transition-colors">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import Backup
+        </button>
+      </div>
     </div>
 
   </div>
@@ -552,14 +561,13 @@
       const ex = exercisesInDay.find(e => e.name === exerciseName);
       if(!ex) return;
 
-      // Finds the first unchecked set box and checks it
       for (let i = 0; i < ex.sets; i++) {
         const key = getTrackKey(exerciseName, i);
         if (!completedSets[key]) {
           completedSets[key] = true;
           try { localStorage.setItem('10WeekTrackerData', JSON.stringify(completedSets)); } catch(e){}
           renderApp();
-          break; // Stop after checking one box
+          break; 
         }
       }
     }
@@ -571,38 +579,60 @@
       }
     }
 
-    function updateTotalVolume() {
-      const volumeData = { "Quads": 0, "Hamstrings": 0, "Glutes": 0, "Adductors": 0, "Hip Flexors": 0, "Lower Back": 0, "Upper Back / Lats": 0, "Core": 0, "Calves / Tibialis": 0 };
-      
-      for (const [catName, catData] of Object.entries(workoutData)) {
-        if (catName === "Main Plan") {
-          for (const [phaseId, phaseData] of Object.entries(catData)) {
-            for (const [dayName, exercises] of Object.entries(phaseData)) {
-              exercises.forEach(ex => {
-                if (ex.type === 'static') return; 
-                const targetMuscles = getMuscleGroups(ex.name);
-                for (let i = 0; i < ex.sets; i++) {
-                  if (completedSets[`${catName}-${phaseId}-${dayName}-${ex.name}-${i}`]) {
-                    targetMuscles.forEach(m => { if (volumeData[m] !== undefined) volumeData[m]++; });
-                  }
-                }
-              });
+    function exportProgressData() {
+      try {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(completedSets));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "strength_mobility_progress.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+      } catch (err) {
+        alert("Could not export data.");
+      }
+    }
+
+    function importProgressData() {
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.json';
+      fileInput.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = readerEvent => {
+          try {
+            const parsed = JSON.parse(readerEvent.target.result);
+            if (parsed && typeof parsed === 'object') {
+              completedSets = parsed;
+              localStorage.setItem('10WeekTrackerData', JSON.stringify(completedSets));
+              renderApp();
+              alert("Progress successfully restored!");
+            } else {
+              alert("Invalid file structure detected.");
             }
-          }
-        } else {
-          for (const [dayName, exercises] of Object.entries(catData)) {
-            exercises.forEach(ex => {
-              if (ex.type === 'static') return; 
-              const targetMuscles = getMuscleGroups(ex.name);
-              for (let i = 0; i < ex.sets; i++) {
-                if (completedSets[`${catName}-static-${dayName}-${ex.name}-${i}`]) {
-                  targetMuscles.forEach(m => { if (volumeData[m] !== undefined) volumeData[m]++; });
-                }
-              }
-            });
+          } catch (err) {
+            alert("Error reading file.");
           }
         }
+        reader.readAsText(file);
       }
+      fileInput.click();
+    }
+
+    function updateTotalVolume(fullDayExercises) {
+      const volumeData = { "Quads": 0, "Hamstrings": 0, "Glutes": 0, "Adductors": 0, "Hip Flexors": 0, "Lower Back": 0, "Upper Back / Lats": 0, "Core": 0, "Calves / Tibialis": 0 };
+      
+      // Calculate ONLY for the currently displayed day
+      fullDayExercises.forEach(ex => {
+        if (ex.type === 'static') return; 
+        const targetMuscles = getMuscleGroups(ex.name);
+        for (let i = 0; i < ex.sets; i++) {
+          if (completedSets[getTrackKey(ex.name, i)]) {
+            targetMuscles.forEach(m => { if (volumeData[m] !== undefined) volumeData[m]++; });
+          }
+        }
+      });
 
       const container = document.getElementById('volume-stats');
       container.innerHTML = '';
@@ -619,7 +649,7 @@
     }
 
     function updateProgress(fullDayExercises) {
-      updateTotalVolume();
+      updateTotalVolume(fullDayExercises);
       
       let totalSets = 0; let completedSetsCount = 0;
       fullDayExercises.forEach(ex => {
@@ -711,11 +741,10 @@
 
         if (speechSequence.length === 0) {
           stopTempo(); 
-          
           if (restTime && restTime > 0) {
-             startExerciseTimer(restTime, exerciseName); // Starts timer AND checks the box
+             startExerciseTimer(restTime, exerciseName); 
           } else {
-             autoCheckNextSet(exerciseName); // Checks the box even if no rest time
+             autoCheckNextSet(exerciseName); 
           }
           return;
         }
