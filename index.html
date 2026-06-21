@@ -33,7 +33,6 @@
       </div>
     </div>
 
-    <!-- Timer Sticky Bar -->
     <div class="sticky top-4 z-50 bg-neutral-800 border border-neutral-700 rounded-2xl p-4 shadow-2xl flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <svg id="timer-icon" class="w-6 h-6 text-neutral-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -79,7 +78,6 @@
         <div id="progress-bar" class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-500 ease-out rounded-full" style="width: 0%"></div>
       </div>
       
-      <!-- Type Switcher Tabs (Dynamic vs Static) -->
       <div id="type-tabs" class="flex gap-2 mt-5"></div>
     </div>
 
@@ -103,7 +101,6 @@
 
     const categoriesList = ["Main Plan", "Recovery", "ATG"];
 
-    // Explicitly added holdTime (in seconds) to all static stretches and isometric core holds
     const workoutData = {
       "Main Plan": {
         p1: {
@@ -332,7 +329,7 @@
     let activeCategory = "Main Plan";
     let activePhaseId = "p1";
     let activeSubDay = "Day 1: Hips & Glutes";
-    let activeFilter = "dynamic"; // Tracks sub-tab
+    let activeFilter = "dynamic"; 
     
     let completedSets = {};
     try {
@@ -348,7 +345,7 @@
     let tempoIntervalSpeech = null;
     let activeTempoButtonId = null;
     let speechUnlocked = false;
-    let speechSequence = []; // Stores the pre-calculated tempo audio queue
+    let speechSequence = []; 
 
     function unlockSpeech() {
       if(!speechUnlocked) {
@@ -408,7 +405,6 @@
       
       if (!days.includes(activeSubDay)) activeSubDay = days[0];
 
-      // Draw Top Day Tabs
       const dayContainer = document.getElementById('day-tabs');
       dayContainer.innerHTML = '';
       days.forEach(day => {
@@ -433,11 +429,9 @@
       const hasDynamic = exercisesInDay.some(ex => (ex.type || 'dynamic') === 'dynamic');
       const hasStatic = exercisesInDay.some(ex => ex.type === 'static');
 
-      // Auto-correct filter
       if (activeFilter === 'dynamic' && !hasDynamic && hasStatic) activeFilter = 'static';
       if (activeFilter === 'static' && !hasStatic && hasDynamic) activeFilter = 'dynamic';
 
-      // Draw Dynamic vs Static Tabs
       const typeContainer = document.getElementById('type-tabs');
       typeContainer.innerHTML = '';
       if (hasDynamic && hasStatic) {
@@ -454,7 +448,6 @@
         });
       }
 
-      // Filter and Render Exercises
       const exercisesToRender = exercisesInDay.filter(ex => (ex.type || 'dynamic') === activeFilter);
       const exContainer = document.getElementById('exercise-list');
       exContainer.innerHTML = '';
@@ -469,7 +462,7 @@
           const isChecked = completedSets[key];
           
           checksHtml += `
-            <button onclick="handleCheck('${ex.name}', ${i})" class="w-12 h-12 md:w-10 md:h-10 rounded-xl flex items-center justify-center transition-all transform active:scale-90 ${
+            <button onclick="handleCheck('${ex.name.replace(/'/g, "\\'")}', ${i})" class="w-12 h-12 md:w-10 md:h-10 rounded-xl flex items-center justify-center transition-all transform active:scale-90 ${
               isChecked 
                 ? 'bg-green-500/20 text-green-500 border-2 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' 
                 : 'bg-neutral-900 border border-neutral-600 text-neutral-600 hover:border-neutral-400'
@@ -487,49 +480,40 @@
                <p class="text-sm text-neutral-300">${ex.advanced}</p>
              </div>` : '';
 
-        const encodedName = encodeURIComponent(ex.name.split(' ').slice(0, 3).join('\n'));
-        const placeholderUrl = `https://placehold.co/150x150/172554/60a5fa?text=${encodedName}`;
         const searchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(ex.name + ' exercise proper form')}`;
         const safeId = ex.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
 
-        // Extract maximum reps targeted to feed into the Voice tempo engine
         const repsMatch = ex.reps.match(/(\d+)/g);
         const targetRepsForAudio = repsMatch ? Math.max(...repsMatch.map(Number)) : 15;
 
         div.innerHTML = `
           <div class="flex flex-col md:flex-row justify-between gap-4">
-            <div class="shrink-0 flex flex-col gap-2 w-full md:w-32">
-              <div class="w-full h-32 bg-neutral-900 rounded-xl overflow-hidden border border-neutral-700 flex items-center justify-center relative group shadow-inner">
-                 <img src="${placeholderUrl}" alt="${ex.name}" onerror="this.src='https://placehold.co/150x150/172554/60a5fa?text=Image'" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
-              </div>
-              <a href="${searchUrl}" target="_blank" class="text-[11px] font-semibold text-center text-blue-400 hover:text-blue-300 hover:underline flex items-center justify-center gap-1 bg-blue-950/30 py-1.5 rounded-lg border border-blue-900/50 transition-colors">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> View Form
-              </a>
-            </div>
-
+            
             <div class="flex-1">
-              <h3 class="text-lg font-bold text-white mb-2">${ex.name}</h3>
+              <div class="flex items-start justify-between mb-2 gap-2">
+                <h3 class="text-lg font-bold text-white leading-tight">${ex.name}</h3>
+                <a href="${searchUrl}" target="_blank" class="shrink-0 text-[11px] font-semibold text-center text-blue-400 hover:text-blue-300 hover:underline flex items-center justify-center gap-1 bg-blue-950/30 px-3 py-1.5 rounded-lg border border-blue-900/50 transition-colors">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> View Form
+                </a>
+              </div>
               <div class="flex items-center gap-2 mb-3 flex-wrap">
                 <span class="inline-block px-2 py-1 bg-neutral-900 text-neutral-300 text-xs font-bold rounded border border-neutral-700">${ex.sets} Sets</span>
                 <span class="inline-block px-2 py-1 bg-neutral-900 text-blue-300 text-xs font-bold rounded border border-neutral-700">${ex.reps}</span>
                 
-                <!-- Rest Timer -->
                 ${ex.rest ? `
-                <button onclick="startTimer(${ex.rest})" class="inline-flex items-center gap-1 px-2 py-1 bg-amber-900/30 hover:bg-amber-900/50 text-amber-400 border border-amber-900/50 text-xs font-bold rounded transition-colors shadow-sm" title="Start ${ex.rest}s Timer">
+                <button onclick="startExerciseTimer(${ex.rest}, '${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1 px-2 py-1 bg-amber-900/30 hover:bg-amber-900/50 text-amber-400 border border-amber-900/50 text-xs font-bold rounded transition-colors shadow-sm" title="Start ${ex.rest}s Timer">
                   <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   Rest: ${ex.restStr || ex.rest + 's'}
                 </button>` : ''}
 
-                <!-- Hold Timer (for Stretches/Planks) -->
                 ${ex.holdTime ? `
-                <button onclick="startTimer(${ex.holdTime})" class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-800/50 text-xs font-bold rounded transition-colors shadow-sm" title="Start ${ex.holdTime}s Hold Timer">
+                <button onclick="startExerciseTimer(${ex.holdTime}, '${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-800/50 text-xs font-bold rounded transition-colors shadow-sm" title="Start ${ex.holdTime}s Hold Timer">
                   <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   Hold: ${ex.holdTime}s
                 </button>` : ''}
 
-                <!-- Tempo Audio Tracker -->
                 ${ex.tempo ? `
-                <button id="tempo-btn-${safeId}" data-orig-text="Tempo: ${ex.tempo.join('-')}" onclick="toggleTempo('${safeId}', ${ex.tempo[0]}, ${ex.tempo[1]}, ${ex.tempo[2]}, ${ex.tempo[3]}, ${targetRepsForAudio})" class="inline-flex items-center gap-1 px-2 py-1 bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-800/50 text-xs font-bold rounded transition-colors shadow-sm">
+                <button id="tempo-btn-${safeId}" data-orig-text="Tempo: ${ex.tempo.join('-')}" onclick="toggleTempo('${safeId}', ${ex.tempo[0]}, ${ex.tempo[1]}, ${ex.tempo[2]}, ${ex.tempo[3]}, ${targetRepsForAudio}, ${ex.rest || 0}, '${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1 px-2 py-1 bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-800/50 text-xs font-bold rounded transition-colors shadow-sm">
                   <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                   Tempo: ${ex.tempo.join('-')}
                 </button>` : ''}
@@ -562,6 +546,31 @@
       renderApp();
     }
 
+    function autoCheckNextSet(exerciseName) {
+      const dataNode = activeCategory === "Main Plan" ? workoutData["Main Plan"][activePhaseId] : workoutData[activeCategory];
+      const exercisesInDay = dataNode[activeSubDay] || [];
+      const ex = exercisesInDay.find(e => e.name === exerciseName);
+      if(!ex) return;
+
+      // Finds the first unchecked set box and checks it
+      for (let i = 0; i < ex.sets; i++) {
+        const key = getTrackKey(exerciseName, i);
+        if (!completedSets[key]) {
+          completedSets[key] = true;
+          try { localStorage.setItem('10WeekTrackerData', JSON.stringify(completedSets)); } catch(e){}
+          renderApp();
+          break; // Stop after checking one box
+        }
+      }
+    }
+
+    function startExerciseTimer(seconds, exerciseName) {
+      startTimer(seconds);
+      if(exerciseName) {
+        autoCheckNextSet(exerciseName);
+      }
+    }
+
     function updateTotalVolume() {
       const volumeData = { "Quads": 0, "Hamstrings": 0, "Glutes": 0, "Adductors": 0, "Hip Flexors": 0, "Lower Back": 0, "Upper Back / Lats": 0, "Core": 0, "Calves / Tibialis": 0 };
       
@@ -570,7 +579,7 @@
           for (const [phaseId, phaseData] of Object.entries(catData)) {
             for (const [dayName, exercises] of Object.entries(phaseData)) {
               exercises.forEach(ex => {
-                if (ex.type === 'static') return; // SKIP STATIC STRETCHING
+                if (ex.type === 'static') return; 
                 const targetMuscles = getMuscleGroups(ex.name);
                 for (let i = 0; i < ex.sets; i++) {
                   if (completedSets[`${catName}-${phaseId}-${dayName}-${ex.name}-${i}`]) {
@@ -583,7 +592,7 @@
         } else {
           for (const [dayName, exercises] of Object.entries(catData)) {
             exercises.forEach(ex => {
-              if (ex.type === 'static') return; // SKIP STATIC STRETCHING
+              if (ex.type === 'static') return; 
               const targetMuscles = getMuscleGroups(ex.name);
               for (let i = 0; i < ex.sets; i++) {
                 if (completedSets[`${catName}-static-${dayName}-${ex.name}-${i}`]) {
@@ -647,19 +656,17 @@
       }
     }
 
-    // Voice Tempo Functions
     function speakText(text) {
       window.speechSynthesis.cancel();
       const msg = new SpeechSynthesisUtterance(text);
-      msg.rate = 1.5; // Slightly sped up to comfortably fit within 1 tick
+      msg.rate = 1.5; 
       window.speechSynthesis.speak(msg);
     }
 
-    function toggleTempo(safeId, ecc, bot, con, top, reps) {
+    function toggleTempo(safeId, ecc, bot, con, top, reps, restTime, exerciseName) {
       unlockSpeech();
       const btnId = 'tempo-btn-' + safeId;
       
-      // Toggle logic: If user clicks the active tempo button again, stop it immediately.
       if(isTempoRunning && activeTempoButtonId === btnId) {
         stopTempo();
         return;
@@ -677,7 +684,6 @@
         btn.innerHTML = `<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Stop Tempo Voice`;
       }
 
-      // Build the exact speech array step-by-step
       speechSequence = [];
       for (let r = 1; r <= reps; r++) {
          if (ecc > 0) {
@@ -696,7 +702,6 @@
              speechSequence.push("Squeeze");
              for(let i=2; i<=top; i++) speechSequence.push(i.toString());
          }
-         // Say rep count at the end of every full cycle
          speechSequence.push(`${r} rep`);
       }
       speechSequence.push("Set completed");
@@ -705,17 +710,22 @@
         if(!isTempoRunning) return;
 
         if (speechSequence.length === 0) {
-          stopTempo();
+          stopTempo(); 
+          
+          if (restTime && restTime > 0) {
+             startExerciseTimer(restTime, exerciseName); // Starts timer AND checks the box
+          } else {
+             autoCheckNextSet(exerciseName); // Checks the box even if no rest time
+          }
           return;
         }
 
-        // Shift the very first phrase off the array and speak it
         const phrase = speechSequence.shift();
         speakText(phrase);
       }
 
-      nextTick(); // Fire immediately
-      tempoIntervalSpeech = setInterval(nextTick, 1000); // Trigger every 1 second
+      nextTick(); 
+      tempoIntervalSpeech = setInterval(nextTick, 1000); 
     }
 
     function stopTempo() {
@@ -737,7 +747,6 @@
       activeTempoButtonId = null;
     }
 
-    // Global Top Timer Functions
     function playBeep() {
       try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
