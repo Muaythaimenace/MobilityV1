@@ -11,11 +11,23 @@
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     body { font-family: system-ui, -apple-system, sans-serif; }
     
+    /* Custom visible scrollbar for tabs */
+    .custom-scrollbar::-webkit-scrollbar { height: 8px; }
+    .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #525252 #171717; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #171717; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #525252; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #737373; }
+
     /* Reduced motion override class */
     .reduced-motion * {
       animation-duration: 0.001ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.001ms !important;
+    }
+
+    /* RPE slider accent */
+    input[type=range].rpe-slider {
+      accent-color: #f97316;
     }
   </style>
 </head>
@@ -70,9 +82,15 @@
       </div>
     </div>
 
-    <div id="category-tabs" class="flex overflow-x-auto gap-2 hide-scrollbar pb-2"></div>
-    <div id="day-tabs" class="flex overflow-x-auto gap-2 hide-scrollbar pb-2"></div>
+    <!-- Category Tabs -->
+    <div id="category-tabs" class="flex overflow-x-auto gap-2 custom-scrollbar pb-2 mt-4"></div>
 
+    <!-- Scrollable Day Tabs (Now with custom visible scrollbar) -->
+    <div class="relative w-full border-b border-neutral-800 pb-2">
+      <div id="day-tabs" class="flex overflow-x-auto gap-3 custom-scrollbar pb-4 snap-x scroll-smooth"></div>
+    </div>
+
+    <!-- Volume Tracker -->
     <div class="bg-neutral-800 border border-neutral-700 rounded-2xl p-5 shadow-lg my-4">
       <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
         <svg class="w-5 h-5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M14 14V7"/><path d="M10 14v-4"/><path d="M6 14v-2"/><path d="M18 14v-6"/></svg>
@@ -81,6 +99,7 @@
       <div id="volume-stats" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2"></div>
     </div>
 
+    <!-- Active Day Progress & Switcher -->
     <div class="bg-neutral-800 border border-neutral-700 rounded-2xl p-5 shadow-lg">
       <div class="flex justify-between items-end mb-3">
         <div>
@@ -99,12 +118,22 @@
       <div id="type-tabs" class="flex gap-2 mt-5"></div>
     </div>
 
-    <div id="exercise-list" class="space-y-4"></div>
+    <div id="exercise-list" class="space-y-4 mt-6"></div>
     
-    <div id="reset-day-container" class="pt-6 flex justify-center hidden">
+    <div id="reset-day-container" class="pt-6 flex flex-col items-center gap-4">
       <button onclick="resetCurrentDay()" class="text-neutral-500 hover:text-red-400 text-sm font-semibold flex items-center gap-2 transition-colors">
-        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset checkboxes for this day
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset checkboxes for this routine
       </button>
+
+      <!-- Progress Backup / Restore Controls -->
+      <div class="flex gap-3 border-t border-neutral-800 pt-4 w-full justify-center">
+        <button onclick="exportProgressData()" class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-xs font-bold text-neutral-400 flex items-center gap-1.5 transition-colors">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Progress
+        </button>
+        <button onclick="importProgressData()" class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-xs font-bold text-neutral-400 flex items-center gap-1.5 transition-colors">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import Backup
+        </button>
+      </div>
     </div>
 
   </div>
@@ -238,194 +267,179 @@
       { id: 'p4', name: 'Weeks 9-10: Peak Output', desc: 'Heaviest safe weights. Actively pull yourself into deep splits during stretching.' }
     ];
 
-    const categoriesList = ["Main Plan", "Recovery", "ATG"];
+    const categoriesList = ["Main Plan", "ATG"];
+
+    // Day 5, 6, 7 generic stretch arrays to inject into all phases
+    const day5Array = [
+      { name: "Cat-Cow Flow", type: "dynamic", sets: 2, reps: "15 cycles", rest: 30, restStr: "30s trans.", notes: "On all fours, slowly alternate arching and rounding your spine.", advanced: "Focus on articulating one single vertebra at a time.", regression: "Seated cat-cow on a chair if wrists hurt." },
+      { name: "Bird Dog", type: "dynamic", sets: 2, reps: "10 / side", rest: 30, restStr: "30s trans.", tempo: [2, 1, 1, 2], notes: "Extend opposite arm and leg, squeeze core to prevent lower back arch.", advanced: "Perform from a plank position (knees off floor).", regression: "Only extend the arms, or only extend the legs (not both at once)." },
+      { name: "Pigeon Pose", type: "static", sets: 1, reps: "3 mins / leg", holdTime: 180, rest: 30, restStr: "30s trans.", notes: "Knee crossed in front on floor. Sink hips down and back to open deep glute.", advanced: "Front shin perfectly parallel to shoulders, chest on floor.", regression: "Perform with front leg elevated on a bench or couch." },
+      { name: "Child's Pose w/ Lat Stretch", type: "static", sets: 1, reps: "2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Sit back on heels. Walk hands to the left, then right, holding each for lat/QL stretch.", advanced: "Reach far enough to lift armpit off the ground.", regression: "Place a yoga block or pillow under your hips if knees pinch." }
+    ];
+
+    const day6Array = [
+      { name: "90/90 Hip Transfers", type: "dynamic", sets: 2, reps: "10 trans.", rest: 30, restStr: "30s trans.", notes: "Sit on floor, knees at 90. Pivot on heels to flip sides.", advanced: "Zero hand support, staying perfectly upright.", regression: "Lean back and place hands on the floor for heavy support." },
+      { name: "Thoracic Rotations", type: "dynamic", sets: 2, reps: "10 / side", rest: 30, restStr: "30s trans.", notes: "Side-lying, rotate top arm open to the floor behind you.", advanced: "Keep the bottom knee pinned completely flat.", regression: "Don't force the shoulder to the floor; just go as far as pain-free." },
+      { name: "Deep Pancake Stretch", type: "static", sets: 1, reps: "3 mins", holdTime: 180, rest: 60, restStr: "60s trans.", notes: "Wide straddle on floor. Hinge forward, reach out. Great for splits prep.", advanced: "Chest completely flat on the floor.", regression: "Sit on a yoga block to elevate hips, bend knees slightly." },
+      { name: "Active Couch Stretch", type: "static", sets: 1, reps: "15 cycles / leg", holdTime: 90, rest: 30, restStr: "30s trans.", notes: "Contract-relax method. Squeeze glute hard for 5s to push hip forward, then relax.", advanced: "Perform without wall support, actively balancing.", regression: "Don't put back foot on a wall; just do a kneeling lunge." }
+    ];
+
+    const day7Array = [
+      { name: "World's Greatest Stretch", type: "dynamic", sets: 2, reps: "6 / side", rest: 30, restStr: "30s trans.", notes: "Lunge position, drop elbow to floor, then twist open to ceiling.", advanced: "Hold each endpoint for 3 seconds.", regression: "Rest the back knee on the floor during the twist." },
+      { name: "Ankle Dorsiflexion Rocks", type: "dynamic", sets: 2, reps: "15 / leg", rest: 30, restStr: "30s trans.", notes: "Kneeling, put weight on front knee over toes to stretch Achilles.", advanced: "Place 45lb plate on knee to force deeper stretch.", regression: "Stand facing a wall and gently stretch calf without deep knee bend." },
+      { name: "Supine Figure 4", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Lie on back, cross one ankle over opposite knee, pull thigh to chest.", advanced: "Pull knee all the way to chest, opposite leg straight.", regression: "Keep bottom foot flat on a wall to passively push the stretch." },
+      { name: "Seated IT Band Twist", type: "static", sets: 1, reps: "2 mins / side", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Cross leg over straight leg, hug knee to chest and twist torso.", advanced: "Hook elbow completely outside knee, tall spine.", regression: "Lie on your back and gently pull the knee across your body." }
+    ];
 
     const workoutData = {
       "Main Plan": {
         p1: {
           "Day 1: Hips & Glutes": [
-            { name: "Banded Glute Bridges", sets: 4, reps: "15-20", rest: 60, restStr: "60-90s", tempo: [1, 0, 1, 3], notes: "Short band above knees. Drive knees out, squeeze hard.", advanced: "Use thickest band, 3-sec pause at the top of every rep." },
-            { name: "Res Band Hip Flexor Marches", sets: 4, reps: "8 / leg", rest: 60, restStr: "60s", tempo: [3, 0, 1, 0], notes: "Use a light band. Focus purely on a slow, 3-second negative to eccentrically strengthen the strained tissue.", advanced: "Add a 2-second isometric pause at the top before the slow negative." },
-            { name: "20lb KB Goblet Squats", sets: 4, reps: "10-12", rest: 90, restStr: "90-120s", tempo: [5, 0, 1, 0], notes: "Squat shoes on. Sink as deep as hips allow pain-free. Controlled descent, immediately drive up.", advanced: "45lb KB with a 5-second slow lowering phase. No pausing at bottom." },
-            { name: "Copenhagen Adductor Planks", sets: 4, reps: "20s / side", holdTime: 20, rest: 60, restStr: "45-60s", notes: "Short-lever (knee on bench). Keeps tension strictly on the inner thighs.", advanced: "Add 10s to the hold time each week." },
-            { name: "Pigeon Pose", type: "static", sets: 1, reps: "3 mins / leg", holdTime: 180, rest: 30, restStr: "30s trans.", notes: "Knee crossed in front on floor. Sink hips down and back to open deep glute.", advanced: "Front shin perfectly parallel to shoulders, chest on floor." },
-            { name: "90/90 Stretch", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Sit with front and back legs at 90 deg. Lean over front shin.", advanced: "Actively lift front foot off the floor (passive-to-active)." },
-            { name: "Supine Figure 4", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Lie on back, cross one ankle over opposite knee, pull thigh to chest.", advanced: "Pull knee all the way to chest, opposite leg straight." },
-            { name: "Seated IT Band Twist", type: "static", sets: 1, reps: "2 mins / side", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Cross leg over straight leg, hug knee to chest and twist torso.", advanced: "Hook elbow completely outside knee, tall spine." }
+            { name: "Banded Glute Bridges", sets: 4, reps: "15-20", rest: 60, restStr: "60-90s", tempo: [1, 0, 1, 3], notes: "Short band above knees. Drive knees out, squeeze hard.", advanced: "Use thickest band, 3-sec pause at the top of every rep.", regression: "Bodyweight glute bridges with no band." },
+            { name: "Res Band Hip Flexor Marches", sets: 4, reps: "8 / leg", rest: 60, restStr: "60s", tempo: [3, 0, 1, 0], notes: "Use a light band. Focus purely on a slow, 3-second negative.", advanced: "Add a 2-second isometric pause at the top.", regression: "Seated knee lifts with no band." },
+            { name: "20lb KB Goblet Squats", sets: 4, reps: "10-12", rest: 90, restStr: "90-120s", tempo: [5, 0, 1, 0], notes: "Squat shoes on. Sink as deep as hips allow pain-free.", advanced: "45lb KB with a 5-second slow lowering phase.", regression: "Bodyweight squats to a box/chair." },
+            { name: "Copenhagen Adductor Planks", sets: 4, reps: "20s / side", holdTime: 20, rest: 60, restStr: "45-60s", notes: "Short-lever (knee on bench). Keeps tension strictly on the inner thighs.", advanced: "Add 10s to the hold time each week.", regression: "Side plank with bottom knee resting on the floor." }
           ],
           "Day 2: Back & Knees": [
-            { name: "45lb KB RDLs", sets: 4, reps: "10", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "3-second slow negative. Deep hamstring stretch.", advanced: "Upgrade to 135lb Barbell with perfect form." },
-            { name: "Terminal Knee Extensions (TKEs)", sets: 4, reps: "20 / leg", rest: 60, restStr: "60s", tempo: [1, 0, 1, 1], notes: "Long band behind knee. Repeatedly straighten to pump blood.", advanced: "Use thickest band, aggressive quad flex at lockout." },
-            { name: "Pull-up Negatives", sets: 4, reps: "5-8", rest: 90, restStr: "90s", tempo: [4, 0, 1, 0], notes: "Jump up, slowly lower yourself over 3-5 seconds.", advanced: "Strict unassisted pull-ups for 10 reps." },
-            { name: "Banded Hamstring Curls", sets: 4, reps: "15", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Anchor long band, lie face down on bench, curl to glutes.", advanced: "Hold a 10lb dumbbell between your feet." },
-            { name: "Banded Calf Stretch", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Band around ball of foot, leg straight, pull toes to shin.", advanced: "Use thickest band, actively flex quad to straighten knee." },
-            { name: "Wall Soleus Stretch (Bent Knee)", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Calf stretch against wall but bend the back knee to target the lower soleus.", advanced: "Knee touches wall while foot is 5+ inches away." },
-            { name: "Kneeling Ankle Dorsiflexion", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Kneeling, put weight on front knee over toes to stretch Achilles/ankle capsule.", advanced: "Place 45lb plate on knee to force deeper stretch." },
-            { name: "Resisted Backward Walking", type: "static", sets: 1, reps: "3-5 mins", holdTime: 180, rest: 60, restStr: "60s trans.", notes: "Use sled or heavy resistance band. Lean back, pump blood into the VMO. Great for knee health without deep flexion.", advanced: "Increase resistance to a heavy sled drag." }
+            { name: "45lb KB RDLs", sets: 4, reps: "10", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "3-second slow negative. Deep hamstring stretch.", advanced: "Upgrade to 135lb Barbell with perfect form.", regression: "Bodyweight hip hinges or very light DBs." },
+            { name: "Terminal Knee Extensions (TKEs)", sets: 4, reps: "20 / leg", rest: 60, restStr: "60s", tempo: [1, 0, 1, 1], notes: "Long band behind knee. Repeatedly straighten to pump blood.", advanced: "Use thickest band, aggressive quad flex at lockout.", regression: "Sit on a chair and just extend leg straight (no band)." },
+            { name: "Pull-up Negatives", sets: 4, reps: "5-8", rest: 90, restStr: "90s", tempo: [4, 0, 1, 0], notes: "Jump up, slowly lower yourself over 3-5 seconds.", advanced: "Strict unassisted pull-ups for 10 reps.", regression: "Inverted rows under a barbell or TRX." },
+            { name: "Banded Hamstring Curls", sets: 4, reps: "15", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Anchor long band, lie face down on bench, curl to glutes.", advanced: "Hold a 10lb dumbbell between your feet.", regression: "Slider hamstring curls on the floor using socks." }
           ],
-          "Day 3: Deep Mobility": [
-            { name: "45lb KB Hip Thrusts", sets: 4, reps: "12", rest: 90, restStr: "90-120s", tempo: [1, 0, 1, 2], notes: "Upper back on bench. Squeeze at the top.", advanced: "Barbell loaded with 135lbs, 2-sec hold at top." },
-            { name: "Slider Lateral Lunges", sets: 4, reps: "6-8 / side", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Use sliders. Push straight leg out, pull back using only the adductor. No extreme knee flexion required.", advanced: "Hold a 20lb KB goblet style." },
-            { name: "Bodyweight Bulgarian Split Squats", sets: 4, reps: "8-10 / leg", rest: 90, restStr: "90s", tempo: [2, 0, 1, 0], notes: "Back foot elevated on bench.", advanced: "Hold 20lb dumbbells in each hand." },
-            { name: "Seated Good Mornings (Empty Bar)", sets: 4, reps: "10", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Sit on bench. Hinge forward at hips.", advanced: "Add 10lb plates per side, chest touches bench." },
-            { name: "Active Couch Stretch", type: "static", sets: 1, reps: "10-15 cycles / leg", holdTime: 60, rest: 30, restStr: "30s trans.", notes: "Contract-relax method. Squeeze glute hard for 5s to push hip forward, then relax. Do not over-stretch the strain.", advanced: "Perform without wall support, actively balancing." },
-            { name: "Deep Pancake Stretch", type: "static", sets: 1, reps: "3 mins", holdTime: 180, rest: 60, restStr: "60s trans.", notes: "Wide straddle on floor. Hinge forward, reach out. Great for splits prep.", advanced: "Chest completely flat on the floor." },
-            { name: "Frog/Butterfly Stretch", type: "static", sets: 1, reps: "2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Soles of feet together, gently press knees down. Opens the adductors.", advanced: "Knees pinned to floor, chest to feet." },
-            { name: "Kneeling Lunge Iso-Hold", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Push hips forward and hold. Do not arch lower back excessively.", advanced: "Actively pull front heel and back knee together." }
+          "Day 3: Deep Range Mobility": [
+            { name: "45lb KB Hip Thrusts", sets: 4, reps: "12", rest: 90, restStr: "90-120s", tempo: [1, 0, 1, 2], notes: "Upper back on bench. Squeeze at the top.", advanced: "Barbell loaded with 135lbs, 2-sec hold at top.", regression: "Bodyweight hip thrusts or floor glute bridges." },
+            { name: "Slider Lateral Lunges", sets: 4, reps: "6-8 / side", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Use sliders. Push straight leg out, pull back using only the adductor.", advanced: "Hold a 20lb KB goblet style.", regression: "Don't go as deep, or hold onto a wall/rack for support." },
+            { name: "Bodyweight Bulgarian Split Squats", sets: 4, reps: "8-10 / leg", rest: 90, restStr: "90s", tempo: [2, 0, 1, 0], notes: "Back foot elevated on bench.", advanced: "Hold 20lb dumbbells in each hand.", regression: "Standard split squats (both feet on the floor)." },
+            { name: "Seated Good Mornings (Empty Bar)", sets: 4, reps: "10", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Sit on bench. Hinge forward at hips.", advanced: "Add 10lb plates per side, chest touches bench.", regression: "Use a broomstick or bodyweight only." }
           ],
           "Day 4: Core & Posterior": [
-            { name: "20lb KB Single-Leg Deadlifts", sets: 4, reps: "8 / leg", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Balance and glute activation on the planted leg.", advanced: "45lb KB, perfect balance without tapping down." },
-            { name: "Roman Chair Back Extensions", sets: 4, reps: "10", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Neutral spine. Hinge at hips, use erectors to lift.", advanced: "Hold a 25lb plate behind your head." },
-            { name: "45lb KB Suitcase Carries", sets: 4, reps: "40s / side", holdTime: 40, rest: 60, restStr: "45-60s", notes: "Heavy KB one hand. Walk. Forces core stability.", advanced: "70lb Kettlebell or heavy dumbbell, zero torso lean." },
-            { name: "Assisted Reverse Nordic Curls", sets: 4, reps: "6-8", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Kneel, hold long band in front for support, lean back.", advanced: "Unassisted, leaning back until shoulders hover 6 inches off floor." },
-            { name: "Cat-Cow Flow", type: "static", sets: 1, reps: "2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "On all fours, slowly alternate arching and rounding your spine.", advanced: "Focus on articulating one single vertebra at a time." },
-            { name: "Child's Pose w/ Lat Stretch", type: "static", sets: 1, reps: "2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Sit back on heels. Walk hands to the left, then right, holding each for lat/QL stretch.", advanced: "Reach far enough to lift armpit off the ground." },
-            { name: "Supine Spinal Twist", type: "static", sets: 1, reps: "2 mins / side", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Lie on back, bring one knee across body to floor. Keep opposite shoulder down.", advanced: "Both shoulder blades pinned flat, knee touches floor." },
-            { name: "Sphinx / Cobra Pose", type: "static", sets: 1, reps: "1-2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Lie on stomach, press chest up gently. Decompresses lower back.", advanced: "Full upward dog, hips staying down, deep abdominal stretch." }
-          ]
+            { name: "20lb KB Single-Leg Deadlifts", sets: 4, reps: "8 / leg", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Balance and glute activation on the planted leg.", advanced: "45lb KB, perfect balance without tapping down.", regression: "Kickstand stance (rest back toe lightly on the floor for balance)." },
+            { name: "Roman Chair Back Extensions", sets: 4, reps: "10", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Neutral spine. Hinge at hips, use erectors to lift.", advanced: "Hold a 25lb plate behind your head.", regression: "Superman holds lying flat on the floor." },
+            { name: "45lb KB Suitcase Carries", sets: 4, reps: "40s / side", holdTime: 40, rest: 60, restStr: "45-60s", notes: "Heavy KB one hand. Walk. Forces core stability.", advanced: "70lb Kettlebell or heavy dumbbell, zero torso lean.", regression: "Use a lighter dumbbell or walk a shorter distance." },
+            { name: "Assisted Reverse Nordic Curls", sets: 4, reps: "6-8", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Kneel, hold long band in front for support, lean back.", advanced: "Unassisted, leaning back until shoulders hover 6 inches off floor.", regression: "Use a much thicker band for max assistance, limit range." }
+          ],
+          "Day 5: Light Dynamic & Stretch": day5Array,
+          "Day 6: Mobility & Flow": day6Array,
+          "Day 7: Deep Restorative": day7Array
         },
         p2: {
           "Day 1: Hips & Glutes": [
-            { name: "Barbell Hip Thrusts", sets: 4, reps: "8-10", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Load up the barbell. Explosive up, control down.", advanced: "225lbs+, explosive concentric, 3-sec lowering." },
-            { name: "Weighted Knee Raises", sets: 4, reps: "10 / leg", rest: 60, restStr: "60s", tempo: [2, 0, 1, 1], notes: "Hold DB between feet or use heavy band.", advanced: "Hang from pull-up bar, strict straight leg raises to bar." },
-            { name: "Barbell Back Squats", sets: 4, reps: "8-10", rest: 120, restStr: "2 mins", tempo: [2, 0, 1, 0], notes: "Squat shoes on. Add weight, hit depth safely.", advanced: "Bodyweight on the bar, deep ATG depth." },
-            { name: "Copenhagen Adductor Planks", sets: 4, reps: "20s / side", holdTime: 20, rest: 60, restStr: "60s", notes: "Long-lever (foot on bench). Ultimate adductor strength builder for middle splits.", advanced: "Hold a light dumbbell on your top hip." },
-            { name: "Pigeon Pose", type: "static", sets: 1, reps: "3 mins / leg", holdTime: 180, rest: 30, restStr: "30s trans.", notes: "Knee crossed in front on floor. Sink hips down and back to open deep glute.", advanced: "Front shin perfectly parallel to shoulders, chest on floor." },
-            { name: "90/90 Stretch", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Sit with front and back legs at 90 deg. Lean over front shin.", advanced: "Actively lift front foot off the floor (passive-to-active)." },
-            { name: "Supine Figure 4", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Lie on back, cross one ankle over opposite knee, pull thigh to chest.", advanced: "Pull knee all the way to chest, opposite leg straight." },
-            { name: "Seated IT Band Twist", type: "static", sets: 1, reps: "2 mins / side", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Cross leg over straight leg, hug knee to chest and twist torso.", advanced: "Hook elbow completely outside knee, tall spine." }
+            { name: "Barbell Hip Thrusts", sets: 4, reps: "8-10", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Load up the barbell. Explosive up, control down.", advanced: "225lbs+, explosive concentric, 3-sec lowering.", regression: "Dumbbell hip thrusts or single-leg glute bridges." },
+            { name: "Weighted Knee Raises", sets: 4, reps: "10 / leg", rest: 60, restStr: "60s", tempo: [2, 0, 1, 1], notes: "Hold DB between feet or use heavy band.", advanced: "Hang from pull-up bar, strict straight leg raises to bar.", regression: "Lying dead-bugs or unweighted marching." },
+            { name: "Barbell Back Squats", sets: 4, reps: "8-10", rest: 120, restStr: "2 mins", tempo: [2, 0, 1, 0], notes: "Squat shoes on. Add weight, hit depth safely.", advanced: "Bodyweight on the bar, deep ATG depth.", regression: "Goblet squats or reduced range of motion box squats." },
+            { name: "Copenhagen Adductor Planks", sets: 4, reps: "20s / side", holdTime: 20, rest: 60, restStr: "60s", notes: "Long-lever (foot on bench). Ultimate adductor strength builder.", advanced: "Hold a light dumbbell on your top hip.", regression: "Short-lever (knee on bench instead of foot)." }
           ],
           "Day 2: Back & Knees": [
-            { name: "Barbell RDLs", sets: 4, reps: "8", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Increase weight. Maintain perfect straight back.", advanced: "Bodyweight on the bar, deep stretch without rounding." },
-            { name: "Weighted Step-Ups", sets: 4, reps: "10 / leg", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Hold DB/KBs. Step onto bench.", advanced: "Hold 45lb KBs, controlled 3-sec descent." },
-            { name: "Pull-ups (Standard)", sets: 4, reps: "Near Failure", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 0], notes: "Full range of motion, from a dead hang.", advanced: "Weighted pull-ups with a 25lb plate." },
-            { name: "Nordic Hamstring Eccentrics", sets: 4, reps: "5", rest: 90, restStr: "90-120s", tempo: [4, 0, 1, 0], notes: "Anchor feet under loaded barbell. Lower slowly.", advanced: "Control the descent all the way to the floor with no hand catch." },
-            { name: "Banded Calf Stretch", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Band around ball of foot, leg straight, pull toes to shin.", advanced: "Use thickest band, actively flex quad to straighten knee." },
-            { name: "Wall Soleus Stretch (Bent Knee)", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Calf stretch against wall but bend the back knee to target the lower soleus.", advanced: "Knee touches wall while foot is 5+ inches away." },
-            { name: "Kneeling Ankle Dorsiflexion", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Kneeling, put weight on front knee over toes to stretch Achilles/ankle capsule.", advanced: "Place 45lb plate on knee to force deeper stretch." },
-            { name: "Resisted Backward Walking", type: "static", sets: 1, reps: "3-5 mins", holdTime: 180, rest: 60, restStr: "60s trans.", notes: "Use sled or heavy resistance band. Lean back, pump blood into the VMO. Great for knee health without deep flexion.", advanced: "Increase resistance to a heavy sled drag." }
+            { name: "Barbell RDLs", sets: 4, reps: "8", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Increase weight. Maintain perfect straight back.", advanced: "Bodyweight on the bar, deep stretch without rounding.", regression: "Kettlebell RDLs." },
+            { name: "Weighted Step-Ups", sets: 4, reps: "10 / leg", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Hold DB/KBs. Step onto bench.", advanced: "Hold 45lb KBs, controlled 3-sec descent.", regression: "Unweighted step-ups onto a lower box." },
+            { name: "Pull-ups (Standard)", sets: 4, reps: "Near Failure", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 0], notes: "Full range of motion, from a dead hang.", advanced: "Weighted pull-ups with a 25lb plate.", regression: "Band-assisted pull-ups or negatives." },
+            { name: "Nordic Hamstring Eccentrics", sets: 4, reps: "5", rest: 90, restStr: "90-120s", tempo: [4, 0, 1, 0], notes: "Anchor feet under loaded barbell. Lower slowly.", advanced: "Control the descent all the way to the floor with no catch.", regression: "Swiss ball or slider hamstring curls." }
           ],
-          "Day 3: Deep Mobility": [
-            { name: "Heavy Goblet Squats", sets: 4, reps: "10", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "45lb KB. Push range of motion deeper. Controlled descent, immediately drive up.", advanced: "70lb KB. No pausing at the bottom to protect knees." },
-            { name: "Slider Lateral Lunges", sets: 4, reps: "6-8 / side", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Use sliders. Push straight leg out, pull back using only the adductor. No extreme knee flexion required.", advanced: "Hold a 20lb KB goblet style." },
-            { name: "Barbell Bulgarian Split Squats", sets: 4, reps: "8 / leg", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 0], notes: "Use empty bar or add plates if comfortable.", advanced: "95lbs on the bar, deep stretch." },
-            { name: "Seated Barbell Good Mornings", sets: 4, reps: "8-10", rest: 90, restStr: "90s", tempo: [2, 0, 1, 1], notes: "Add light plates. Arch lower back.", advanced: "95lbs on the bar, maintain arch." },
-            { name: "Active Couch Stretch", type: "static", sets: 1, reps: "10-15 cycles / leg", holdTime: 60, rest: 30, restStr: "30s trans.", notes: "Contract-relax method. Squeeze glute hard for 5s to push hip forward, then relax. Do not over-stretch the strain.", advanced: "Perform without wall support, actively balancing." },
-            { name: "Deep Pancake Stretch", type: "static", sets: 1, reps: "3 mins", holdTime: 180, rest: 60, restStr: "60s trans.", notes: "Wide straddle on floor. Hinge forward, reach out. Great for splits prep.", advanced: "Chest completely flat on the floor." },
-            { name: "Frog/Butterfly Stretch", type: "static", sets: 1, reps: "2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Soles of feet together, gently press knees down. Opens the adductors.", advanced: "Knees pinned to floor, chest to feet." },
-            { name: "Kneeling Lunge Iso-Hold", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Push hips forward and hold. Do not arch lower back excessively.", advanced: "Actively pull front heel and back knee together." }
+          "Day 3: Deep Range Mobility": [
+            { name: "Heavy Goblet Squats", sets: 4, reps: "10", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "45lb KB. Push range of motion deeper.", advanced: "70lb KB. No pausing at the bottom to protect knees.", regression: "Heel-elevated bodyweight squats." },
+            { name: "Slider Lateral Lunges", sets: 4, reps: "6-8 / side", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Use sliders. Push straight leg out, pull back using only adductor.", advanced: "Hold a 20lb KB goblet style.", regression: "Static side lunges (no sliding)." },
+            { name: "Barbell Bulgarian Split Squats", sets: 4, reps: "8 / leg", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 0], notes: "Use empty bar or add plates if comfortable.", advanced: "95lbs on the bar, deep stretch.", regression: "Dumbbell Bulgarian split squats." },
+            { name: "Seated Barbell Good Mornings", sets: 4, reps: "8-10", rest: 90, restStr: "90s", tempo: [2, 0, 1, 1], notes: "Add light plates. Arch lower back.", advanced: "95lbs on the bar, maintain arch.", regression: "Empty bar or kettlebell held to chest." }
           ],
           "Day 4: Core & Posterior": [
-            { name: "Barbell Stiff-Leg Deadlifts", sets: 4, reps: "8", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Like RDLs but legs straighter. Lighter weight.", advanced: "Standing on a 2-inch deficit block for max stretch." },
-            { name: "Weighted Back Extensions", sets: 4, reps: "10", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Hold 10lb or 20lb KB on Roman Chair.", advanced: "45lb plate or 50lb dumbbell." },
-            { name: "Heavy Farmer's Carry", sets: 4, reps: "40s", holdTime: 40, rest: 60, restStr: "60s", notes: "45lb KB in one hand, heavy DB in the other.", advanced: "70lb KBs in both hands, 60 seconds." },
-            { name: "Unassisted Reverse Nordics", sets: 4, reps: "6-8", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "No band. Go as far back as quads can handle.", advanced: "Shoulders softly touch the floor and pull back up." },
-            { name: "Cat-Cow Flow", type: "static", sets: 1, reps: "2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "On all fours, slowly alternate arching and rounding your spine.", advanced: "Focus on articulating one single vertebra at a time." },
-            { name: "Child's Pose w/ Lat Stretch", type: "static", sets: 1, reps: "2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Sit back on heels. Walk hands to the left, then right, holding each for lat/QL stretch.", advanced: "Reach far enough to lift armpit off the ground." },
-            { name: "Supine Spinal Twist", type: "static", sets: 1, reps: "2 mins / side", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Lie on back, bring one knee across body to floor. Keep opposite shoulder down.", advanced: "Both shoulder blades pinned flat, knee touches floor." },
-            { name: "Sphinx / Cobra Pose", type: "static", sets: 1, reps: "1-2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Lie on stomach, press chest up gently. Decompresses lower back.", advanced: "Full upward dog, hips staying down, deep abdominal stretch." }
-          ]
+            { name: "Barbell Stiff-Leg Deadlifts", sets: 4, reps: "8", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Like RDLs but legs straighter. Lighter weight.", advanced: "Standing on a 2-inch deficit block for max stretch.", regression: "Standard RDLs with a slight knee bend." },
+            { name: "Weighted Back Extensions", sets: 4, reps: "10", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Hold 10lb or 20lb KB on Roman Chair.", advanced: "45lb plate or 50lb dumbbell.", regression: "Bodyweight back extensions." },
+            { name: "Heavy Farmer's Carry", sets: 4, reps: "40s", holdTime: 40, rest: 60, restStr: "60s", notes: "45lb KB in one hand, heavy DB in the other.", advanced: "70lb KBs in both hands, 60 seconds.", regression: "Lighter weights or shorter durations." },
+            { name: "Unassisted Reverse Nordics", sets: 4, reps: "6-8", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "No band. Go as far back as quads can handle.", advanced: "Shoulders softly touch the floor and pull back up.", regression: "Hold a band to assist the pull back up." }
+          ],
+          "Day 5: Light Dynamic & Stretch": day5Array,
+          "Day 6: Mobility & Flow": day6Array,
+          "Day 7: Deep Restorative": day7Array
         },
         p3: {
           "Day 1: Hips & Glutes": [
-            { name: "Deficit Reverse Lunges", sets: 4, reps: "10 / leg", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 0], notes: "Stand on a plate. Step back and drop knee deep.", advanced: "Barbell on back, 4-inch deficit block." },
-            { name: "Banded Psoas Holds", sets: 4, reps: "30s / leg", holdTime: 30, rest: 60, restStr: "60s", notes: "Drive knee up against band and hold.", advanced: "Attach kettlebell to foot via monkey foot/strap." },
-            { name: "ATG Goblet Squats", sets: 4, reps: "12", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 0], notes: "45lb KB. Squat shoes. Hamstrings touch calves.", advanced: "Elevate heels on slant board, 70lb KB." },
-            { name: "Single-Leg Glute Bridges", sets: 4, reps: "10 / leg", rest: 60, restStr: "60-90s", tempo: [1, 0, 1, 2], notes: "Foot elevated on bench. Drive hips up.", advanced: "Shoulders on bench, 45lb plate on working hip." },
-            { name: "Pigeon Pose", type: "static", sets: 1, reps: "3 mins / leg", holdTime: 180, rest: 30, restStr: "30s trans.", notes: "Knee crossed in front on floor. Sink hips down and back to open deep glute.", advanced: "Front shin perfectly parallel to shoulders, chest on floor." },
-            { name: "90/90 Stretch", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Sit with front and back legs at 90 deg. Lean over front shin.", advanced: "Actively lift front foot off the floor (passive-to-active)." },
-            { name: "Supine Figure 4", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Lie on back, cross one ankle over opposite knee, pull thigh to chest.", advanced: "Pull knee all the way to chest, opposite leg straight." },
-            { name: "Seated IT Band Twist", type: "static", sets: 1, reps: "2 mins / side", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Cross leg over straight leg, hug knee to chest and twist torso.", advanced: "Hook elbow completely outside knee, tall spine." }
+            { name: "Deficit Reverse Lunges", sets: 4, reps: "10 / leg", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 0], notes: "Stand on a plate. Step back and drop knee deep.", advanced: "Barbell on back, 4-inch deficit block.", regression: "Flat ground reverse lunges." },
+            { name: "Banded Psoas Holds", sets: 4, reps: "30s / leg", holdTime: 30, rest: 60, restStr: "60s", notes: "Drive knee up against band and hold.", advanced: "Attach kettlebell to foot via monkey foot/strap.", regression: "Iso-hold without a band (just squeeze leg up)." },
+            { name: "ATG Goblet Squats", sets: 4, reps: "12", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 0], notes: "45lb KB. Squat shoes. Hamstrings touch calves.", advanced: "Elevate heels on slant board, 70lb KB.", regression: "Standard depth goblet squat." },
+            { name: "Single-Leg Glute Bridges", sets: 4, reps: "10 / leg", rest: 60, restStr: "60-90s", tempo: [1, 0, 1, 2], notes: "Foot elevated on bench. Drive hips up.", advanced: "Shoulders on bench, 45lb plate on working hip.", regression: "Both feet on the bench." }
           ],
           "Day 2: Back & Knees": [
-            { name: "Deficit Barbell RDLs", sets: 4, reps: "8", rest: 120, restStr: "2 mins", tempo: [3, 0, 1, 0], notes: "Stand on a weight plate for extra stretch at bottom. Maintain a strict 3-to-4-second descent.", advanced: "Stand on 45lb plate, bar touches toes." },
-            { name: "Poliquin Step-Ups", sets: 4, reps: "12 / leg", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 0], notes: "Heel elevated. Target the VMO (teardrop quad muscle).", advanced: "Hold 50% bodyweight, 6-inch step height." },
-            { name: "Wide-Grip Pull-ups", sets: 4, reps: "Near Failure", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 0], notes: "Wider grip to target lats and teres major.", advanced: "Chest touches the bar on every rep." },
-            { name: "Slider Hamstring Curls", sets: 4, reps: "12", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Use socks on smooth floor or towels. Curl heels to glutes.", advanced: "Single-leg slider curls." },
-            { name: "Banded Calf Stretch", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Band around ball of foot, leg straight, pull toes to shin.", advanced: "Use thickest band, actively flex quad to straighten knee." },
-            { name: "Wall Soleus Stretch (Bent Knee)", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Calf stretch against wall but bend the back knee to target the lower soleus.", advanced: "Knee touches wall while foot is 5+ inches away." },
-            { name: "Kneeling Ankle Dorsiflexion", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Kneeling, put weight on front knee over toes to stretch Achilles/ankle capsule.", advanced: "Place 45lb plate on knee to force deeper stretch." },
-            { name: "Resisted Backward Walking", type: "static", sets: 1, reps: "3-5 mins", holdTime: 180, rest: 60, restStr: "60s trans.", notes: "Use sled or heavy resistance band. Lean back, pump blood into the VMO. Great for knee health without deep flexion.", advanced: "Increase resistance to a heavy sled drag." }
+            { name: "Deficit Barbell RDLs", sets: 4, reps: "8", rest: 120, restStr: "2 mins", tempo: [3, 0, 1, 0], notes: "Stand on a weight plate for extra stretch at bottom.", advanced: "Stand on 45lb plate, bar touches toes.", regression: "Standard RDLs (no deficit)." },
+            { name: "Poliquin Step-Ups", sets: 4, reps: "12 / leg", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 0], notes: "Heel elevated. Target the VMO (teardrop quad muscle).", advanced: "Hold 50% bodyweight, 6-inch step height.", regression: "Flat ground Patrick step-ups." },
+            { name: "Wide-Grip Pull-ups", sets: 4, reps: "Near Failure", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 0], notes: "Wider grip to target lats and teres major.", advanced: "Chest touches the bar on every rep.", regression: "Standard shoulder-width grip." },
+            { name: "Slider Hamstring Curls", sets: 4, reps: "12", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Use socks on smooth floor or towels. Curl heels to glutes.", advanced: "Single-leg slider curls.", regression: "Banded hamstring curls." }
           ],
-          "Day 3: Deep Mobility": [
-            { name: "Single-Leg Hip Thrusts", sets: 4, reps: "10 / leg", rest: 60, restStr: "60-90s", tempo: [1, 0, 1, 2], notes: "Shoulders on bench. Bodyweight or 10lb KB.", advanced: "Hold 45lb plate on the working hip." },
-            { name: "Slider Lateral Lunges", sets: 4, reps: "6-8 / side", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Use sliders. Push straight leg out, pull back using only the adductor. No extreme knee flexion required.", advanced: "Hold a 20lb KB goblet style." },
-            { name: "Front-Foot Elevated Split Squats", sets: 4, reps: "8 / leg", rest: 90, restStr: "90-120s", tempo: [2, 1, 1, 0], notes: "Front foot on a plate. Massive hip flexor stretch.", advanced: "Barbell loaded, massive trailing hip stretch." },
-            { name: "Jefferson Curls", sets: 4, reps: "10", rest: 60, restStr: "60-90s", tempo: [4, 0, 1, 0], notes: "Empty barbell. Round spine vertebra by vertebra. Light weight!", advanced: "60lb KB, stand on box, wrists go below toes." },
-            { name: "Active Couch Stretch", type: "static", sets: 1, reps: "10-15 cycles / leg", holdTime: 60, rest: 30, restStr: "30s trans.", notes: "Contract-relax method. Squeeze glute hard for 5s to push hip forward, then relax. Do not over-stretch the strain.", advanced: "Perform without wall support, actively balancing." },
-            { name: "Deep Pancake Stretch", type: "static", sets: 1, reps: "3 mins", holdTime: 180, rest: 60, restStr: "60s trans.", notes: "Wide straddle on floor. Hinge forward, reach out. Great for splits prep.", advanced: "Chest completely flat on the floor." },
-            { name: "Frog/Butterfly Stretch", type: "static", sets: 1, reps: "2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Soles of feet together, gently press knees down. Opens the adductors.", advanced: "Knees pinned to floor, chest to feet." },
-            { name: "Kneeling Lunge Iso-Hold", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Push hips forward and hold. Do not arch lower back excessively.", advanced: "Actively pull front heel and back knee together." }
+          "Day 3: Deep Range Mobility": [
+            { name: "Single-Leg Hip Thrusts", sets: 4, reps: "10 / leg", rest: 60, restStr: "60-90s", tempo: [1, 0, 1, 2], notes: "Shoulders on bench. Bodyweight or 10lb KB.", advanced: "Hold 45lb plate on the working hip.", regression: "Standard hip thrusts (both legs down)." },
+            { name: "Slider Lateral Lunges", sets: 4, reps: "6-8 / side", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Use sliders. Push straight leg out, pull back using only adductor.", advanced: "Hold a 20lb KB goblet style.", regression: "Hold onto a rack for assistance pulling back up." },
+            { name: "Front-Foot Elevated Split Squats", sets: 4, reps: "8 / leg", rest: 90, restStr: "90-120s", tempo: [2, 1, 1, 0], notes: "Front foot on a plate. Massive hip flexor stretch.", advanced: "Barbell loaded, massive trailing hip stretch.", regression: "Flat ground split squats." },
+            { name: "Jefferson Curls", sets: 4, reps: "10", rest: 60, restStr: "60-90s", tempo: [4, 0, 1, 0], notes: "Empty barbell. Round spine vertebra by vertebra. Light weight!", advanced: "60lb KB, stand on box, wrists go below toes.", regression: "Elephant walks (no weight)." }
           ],
           "Day 4: Core & Posterior": [
-            { name: "B-Stance Barbell RDLs", sets: 4, reps: "8 / leg", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Kickstand one foot back for balance, isolate front leg.", advanced: "135lbs+, pure isolation on the front hamstring." },
-            { name: "Superman Holds", sets: 4, reps: "30s", holdTime: 30, rest: 60, restStr: "60s", notes: "Lie on stomach, lift arms and legs. Hold and squeeze.", advanced: "Hold light plates in hands, 60s continuous." },
-            { name: "Overhead KB Carry", sets: 4, reps: "30s / side", holdTime: 30, rest: 60, restStr: "60s", notes: "20lb KB locked out overhead. Walk. Ultimate core brace.", advanced: "45lb KB, perfect shoulder alignment." },
-            { name: "Deep Reverse Nordics", sets: 4, reps: "6", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Hold 10lb KB to chest. Lean back into extreme stretch.", advanced: "Hold 25lb plate to chest, full range to floor." },
-            { name: "Cat-Cow Flow", type: "static", sets: 1, reps: "2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "On all fours, slowly alternate arching and rounding your spine.", advanced: "Focus on articulating one single vertebra at a time." },
-            { name: "Child's Pose w/ Lat Stretch", type: "static", sets: 1, reps: "2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Sit back on heels. Walk hands to the left, then right, holding each for lat/QL stretch.", advanced: "Reach far enough to lift armpit off the ground." },
-            { name: "Supine Spinal Twist", type: "static", sets: 1, reps: "2 mins / side", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Lie on back, bring one knee across body to floor. Keep opposite shoulder down.", advanced: "Both shoulder blades pinned flat, knee touches floor." },
-            { name: "Sphinx / Cobra Pose", type: "static", sets: 1, reps: "1-2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Lie on stomach, press chest up gently. Decompresses lower back.", advanced: "Full upward dog, hips staying down, deep abdominal stretch." }
-          ]
+            { name: "B-Stance Barbell RDLs", sets: 4, reps: "8 / leg", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Kickstand one foot back for balance, isolate front leg.", advanced: "135lbs+, pure isolation on the front hamstring.", regression: "Standard Barbell RDLs." },
+            { name: "Superman Holds", sets: 4, reps: "30s", holdTime: 30, rest: 60, restStr: "60s", notes: "Lie on stomach, lift arms and legs. Hold and squeeze.", advanced: "Hold light plates in hands, 60s continuous.", regression: "Only lift the upper body, keep legs on the floor." },
+            { name: "Overhead KB Carry", sets: 4, reps: "30s / side", holdTime: 30, rest: 60, restStr: "60s", notes: "20lb KB locked out overhead. Walk. Ultimate core brace.", advanced: "45lb KB, perfect shoulder alignment.", regression: "Rack carry (hold KB at shoulder height instead of overhead)." },
+            { name: "Deep Reverse Nordics", sets: 4, reps: "6", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Hold 10lb KB to chest. Lean back into extreme stretch.", advanced: "Hold 25lb plate to chest, full range to floor.", regression: "Unweighted reverse nordics." }
+          ],
+          "Day 5: Light Dynamic & Stretch": day5Array,
+          "Day 6: Mobility & Flow": day6Array,
+          "Day 7: Deep Restorative": day7Array
         },
         p4: {
           "Day 1: Hips & Glutes": [
-            { name: "Heavy Barbell Squats", sets: 4, reps: "5-8", rest: 180, restStr: "2-3 mins", tempo: [2, 0, 1, 0], notes: "Heaviest weight. Full range of motion.", advanced: "1.5x Bodyweight, full ATG depth." },
-            { name: "Hanging Leg Raises", sets: 4, reps: "10", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Hang from pullup bar. Bring toes as high as possible.", advanced: "Strict toes-to-bar with zero swinging." },
-            { name: "Middle Split Isometrics", type: "static", sets: 4, reps: "30s", holdTime: 30, rest: 60, restStr: "60s", notes: "Slide out into middle split. Stay right at the edge of discomfort, actively press feet into floor.", advanced: "Hold dumbbells, lift self off floor using only inner thighs." },
-            { name: "Heavy Roman Chair Glute Ext", sets: 4, reps: "10", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 2], notes: "Hold 20lb or 45lb KB. Glutes doing all the work.", advanced: "Hold 70lb KB or barbell across back." },
-            { name: "Pigeon Pose", type: "static", sets: 1, reps: "3 mins / leg", holdTime: 180, rest: 30, restStr: "30s trans.", notes: "Knee crossed in front on floor. Sink hips down and back to open deep glute.", advanced: "Front shin perfectly parallel to shoulders, chest on floor." },
-            { name: "90/90 Stretch", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Sit with front and back legs at 90 deg. Lean over front shin.", advanced: "Actively lift front foot off the floor (passive-to-active)." },
-            { name: "Supine Figure 4", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Lie on back, cross one ankle over opposite knee, pull thigh to chest.", advanced: "Pull knee all the way to chest, opposite leg straight." },
-            { name: "Seated IT Band Twist", type: "static", sets: 1, reps: "2 mins / side", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Cross leg over straight leg, hug knee to chest and twist torso.", advanced: "Hook elbow completely outside knee, tall spine." }
+            { name: "Heavy Barbell Squats", sets: 4, reps: "5-8", rest: 180, restStr: "2-3 mins", tempo: [2, 0, 1, 0], notes: "Heaviest weight. Full range of motion.", advanced: "1.5x Bodyweight, full ATG depth.", regression: "Lighter load or Box Squats." },
+            { name: "Hanging Leg Raises", sets: 4, reps: "10", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Hang from pullup bar. Bring toes as high as possible.", advanced: "Strict toes-to-bar with zero swinging.", regression: "Hanging knee tucks." },
+            { name: "Middle Split Isometrics", type: "static", sets: 4, reps: "30s", holdTime: 30, rest: 60, restStr: "60s", notes: "Slide out into middle split. Actively press feet into floor.", advanced: "Hold dumbbells, lift self off floor using only inner thighs.", regression: "Frog stretch on elbows." },
+            { name: "Heavy Roman Chair Glute Ext", sets: 4, reps: "10", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 2], notes: "Hold 20lb or 45lb KB. Glutes doing all the work.", advanced: "Hold 70lb KB or barbell across back.", regression: "Bodyweight glute extensions." }
           ],
           "Day 2: Back & Knees": [
-            { name: "Heavy Barbell RDLs", sets: 4, reps: "5-8", rest: 180, restStr: "2-3 mins", tempo: [3, 0, 1, 0], notes: "Max weight with perfect neutral spine. Maintain a strict 3-to-4-second descent.", advanced: "1.5x Bodyweight, flawless flat back." },
-            { name: "Front Squats (Barbell)", sets: 4, reps: "8", rest: 120, restStr: "2 mins", tempo: [2, 0, 1, 0], notes: "Rest bar on front delts. Incredibly demanding on core/quads.", advanced: "Bodyweight on the bar, upright torso." },
-            { name: "Weighted Pull-ups", sets: 4, reps: "5-8", rest: 120, restStr: "2 mins", tempo: [2, 0, 1, 0], notes: "Hold DB between feet. Pure upper body power.", advanced: "45lb plate attached to dip belt." },
-            { name: "Nordic Hamstring Curls", sets: 4, reps: "5", rest: 90, restStr: "90-120s", tempo: [4, 0, 1, 0], notes: "Try to control the descent all the way to the floor.", advanced: "Full unassisted concentric (pulling yourself back up)." },
-            { name: "Banded Calf Stretch", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Band around ball of foot, leg straight, pull toes to shin.", advanced: "Use thickest band, actively flex quad to straighten knee." },
-            { name: "Wall Soleus Stretch (Bent Knee)", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Calf stretch against wall but bend the back knee to target the lower soleus.", advanced: "Knee touches wall while foot is 5+ inches away." },
-            { name: "Kneeling Ankle Dorsiflexion", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Kneeling, put weight on front knee over toes to stretch Achilles/ankle capsule.", advanced: "Place 45lb plate on knee to force deeper stretch." },
-            { name: "Resisted Backward Walking", type: "static", sets: 1, reps: "3-5 mins", holdTime: 180, rest: 60, restStr: "60s trans.", notes: "Use sled or heavy resistance band. Lean back, pump blood into the VMO. Great for knee health without deep flexion.", advanced: "Increase resistance to a heavy sled drag." }
+            { name: "Heavy Barbell RDLs", sets: 4, reps: "5-8", rest: 180, restStr: "2-3 mins", tempo: [3, 0, 1, 0], notes: "Max weight with perfect neutral spine.", advanced: "1.5x Bodyweight, flawless flat back.", regression: "Lighter load to maintain form." },
+            { name: "Front Squats (Barbell)", sets: 4, reps: "8", rest: 120, restStr: "2 mins", tempo: [2, 0, 1, 0], notes: "Rest bar on front delts. Incredibly demanding on core/quads.", advanced: "Bodyweight on the bar, upright torso.", regression: "Goblet squats or Zombie squats." },
+            { name: "Weighted Pull-ups", sets: 4, reps: "5-8", rest: 120, restStr: "2 mins", tempo: [2, 0, 1, 0], notes: "Hold DB between feet. Pure upper body power.", advanced: "45lb plate attached to dip belt.", regression: "Bodyweight pull-ups." },
+            { name: "Nordic Hamstring Curls", sets: 4, reps: "5", rest: 90, restStr: "90-120s", tempo: [4, 0, 1, 0], notes: "Try to control the descent all the way to the floor.", advanced: "Full unassisted concentric (pulling yourself back up).", regression: "Only do the eccentric with a hand catch." }
           ],
-          "Day 3: Deep Mobility": [
-            { name: "Heavy Barbell Hip Thrusts", sets: 4, reps: "6-8", rest: 120, restStr: "2 mins", tempo: [1, 0, 1, 2], notes: "Max weight. 2-second hold at the top.", advanced: "2x Bodyweight, 3-sec pause at lockout." },
-            { name: "Heavy Slider Lateral Lunges", sets: 4, reps: "6 / side", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Heaviest safe weight. Maximize the stretch on the straight leg.", advanced: "Hold a 45lb KB." },
-            { name: "Heavy DB Bulgarian Split Squats", sets: 4, reps: "8 / leg", rest: 120, restStr: "2 mins", tempo: [2, 3, 1, 0], notes: "Max depth. Let the back knee hover over floor.", advanced: "2x 50lb+ DBs, 3-second pause at bottom." },
-            { name: "Front Split Isometrics", type: "static", sets: 4, reps: "30s / side", holdTime: 30, rest: 60, restStr: "60s", notes: "Use rack for support. Actively pull into front split.", advanced: "Zero hand support, actively lifting bodyweight with legs." },
-            { name: "Active Couch Stretch", type: "static", sets: 1, reps: "10-15 cycles / leg", holdTime: 60, rest: 30, restStr: "30s trans.", notes: "Contract-relax method. Squeeze glute hard for 5s to push hip forward, then relax. Do not over-stretch the strain.", advanced: "Perform without wall support, actively balancing." },
-            { name: "Deep Pancake Stretch", type: "static", sets: 1, reps: "3 mins", holdTime: 180, rest: 60, restStr: "60s trans.", notes: "Wide straddle on floor. Hinge forward, reach out. Great for splits prep.", advanced: "Chest completely flat on the floor." },
-            { name: "Frog/Butterfly Stretch", type: "static", sets: 1, reps: "2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Soles of feet together, gently press knees down. Opens the adductors.", advanced: "Knees pinned to floor, chest to feet." },
-            { name: "Kneeling Lunge Iso-Hold", type: "static", sets: 1, reps: "2 mins / leg", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Push hips forward and hold. Do not arch lower back excessively.", advanced: "Actively pull front heel and back knee together." }
+          "Day 3: Deep Range Mobility": [
+            { name: "Heavy Barbell Hip Thrusts", sets: 4, reps: "6-8", rest: 120, restStr: "2 mins", tempo: [1, 0, 1, 2], notes: "Max weight. 2-second hold at the top.", advanced: "2x Bodyweight, 3-sec pause at lockout.", regression: "Reduce weight and focus purely on the squeeze." },
+            { name: "Heavy Slider Lateral Lunges", sets: 4, reps: "6 / side", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Heaviest safe weight. Maximize the stretch on the straight leg.", advanced: "Hold a 45lb KB.", regression: "Bodyweight slider lunges." },
+            { name: "Heavy DB Bulgarian Split Squats", sets: 4, reps: "8 / leg", rest: 120, restStr: "2 mins", tempo: [2, 3, 1, 0], notes: "Max depth. Let the back knee hover over floor.", advanced: "2x 50lb+ DBs, 3-second pause at bottom.", regression: "Bodyweight Bulgarian split squats." },
+            { name: "Front Split Isometrics", type: "static", sets: 4, reps: "30s / side", holdTime: 30, rest: 60, restStr: "60s", notes: "Use rack for support. Actively pull into front split.", advanced: "Zero hand support, actively lifting bodyweight with legs.", regression: "Couch stretch." }
           ],
           "Day 4: Core & Posterior": [
-            { name: "Heavy Single-Leg KB DL", sets: 4, reps: "6 / leg", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Use 45lb KB. Impeccable balance.", advanced: "70lb KB, or dual 45lb KBs." },
-            { name: "Heavy Roman Chair Back Ext", sets: 4, reps: "8", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 1], notes: "Hold 45lb KB. Smooth, controlled reps.", advanced: "Barbell held on back (Good morning style)." },
-            { name: "Zercher Carries", sets: 4, reps: "40s", holdTime: 40, rest: 90, restStr: "90s", notes: "Hold loaded barbell in the crooks of your elbows. Walk.", advanced: "Heavy loaded barbell, 60s unbroken walk." },
-            { name: "Advanced Reverse Nordics", sets: 4, reps: "5", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Try to touch your shoulders to the floor behind you.", advanced: "Hold 45lb plate, full range." },
-            { name: "Cat-Cow Flow", type: "static", sets: 1, reps: "2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "On all fours, slowly alternate arching and rounding your spine.", advanced: "Focus on articulating one single vertebra at a time." },
-            { name: "Child's Pose w/ Lat Stretch", type: "static", sets: 1, reps: "2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Sit back on heels. Walk hands to the left, then right, holding each for lat/QL stretch.", advanced: "Reach far enough to lift armpit off the ground." },
-            { name: "Supine Spinal Twist", type: "static", sets: 1, reps: "2 mins / side", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Lie on back, bring one knee across body to floor. Keep opposite shoulder down.", advanced: "Both shoulder blades pinned flat, knee touches floor." },
-            { name: "Sphinx / Cobra Pose", type: "static", sets: 1, reps: "1-2 mins", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Lie on stomach, press chest up gently. Decompresses lower back.", advanced: "Full upward dog, hips staying down, deep abdominal stretch." }
-          ]
+            { name: "Heavy Single-Leg KB DL", sets: 4, reps: "6 / leg", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Use 45lb KB. Impeccable balance.", advanced: "70lb KB, or dual 45lb KBs.", regression: "Lighter KB, or kickstand stance." },
+            { name: "Heavy Roman Chair Back Ext", sets: 4, reps: "8", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 1], notes: "Hold 45lb KB. Smooth, controlled reps.", advanced: "Barbell held on back (Good morning style).", regression: "Bodyweight back extensions." },
+            { name: "Zercher Carries", sets: 4, reps: "40s", holdTime: 40, rest: 90, restStr: "90s", notes: "Hold loaded barbell in the crooks of your elbows. Walk.", advanced: "Heavy loaded barbell, 60s unbroken walk.", regression: "Front rack kettlebell carry." },
+            { name: "Advanced Reverse Nordics", sets: 4, reps: "5", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Try to touch your shoulders to the floor behind you.", advanced: "Hold 45lb plate, full range.", regression: "Bodyweight reverse nordics." }
+          ],
+          "Day 5: Light Dynamic & Stretch": day5Array,
+          "Day 6: Mobility & Flow": day6Array,
+          "Day 7: Deep Restorative": day7Array
         }
       },
-      "Recovery": {
-        "Jobsite Swap-In": [
-          { name: "Dead Hangs", type: "static", sets: 4, reps: "30-45s", holdTime: 45, rest: 60, restStr: "60s", notes: "Total spinal decompression after laying stone. Breathe deep.", advanced: "Single-arm hangs, 30s per side." },
-          { name: "Elevated ATG Split Squats", sets: 4, reps: "5 / leg", rest: 60, restStr: "60s", tempo: [3, 0, 1, 0], notes: "Zero weight. Front foot on bench. Stretch back hip flexor safely.", advanced: "Hold 10lb DBs to assist balance and stretch." },
-          { name: "Banded Clamshells", sets: 4, reps: "15 / side", rest: 45, restStr: "45s", tempo: [1, 0, 1, 2], notes: "Isolates glute medius for stability without loading spine.", advanced: "Add 10lb DB resting on top knee." },
-          { name: "90/90 Hip Transfers", sets: 4, reps: "10 trans.", rest: 60, restStr: "60s", notes: "Sit on floor, knees at 90. Pivot on heels to flip sides.", advanced: "Zero hand support, staying perfectly upright." }
-        ]
-      },
       "ATG": {
-        "Knees Over Toes": [
-          { name: "ATG Split Squats", sets: 4, reps: "5 / leg", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Squat shoes on. Flat ground. Max forward knee travel. Back leg straight.", advanced: "Hold 50% of your bodyweight in dumbbells." },
-          { name: "Tibialis Raises", sets: 3, reps: "25", rest: 45, restStr: "45-60s", tempo: [1, 0, 1, 2], notes: "Lean back on wall, legs straight, lift toes. Protects knees.", advanced: "Single-leg tibialis raises or use a Tib-Bar." },
-          { name: "Elephant Walks", sets: 3, reps: "15 / leg", rest: 60, restStr: "60s", tempo: [2, 0, 1, 1], notes: "Bend over, grab toes. Alternate straightening legs to stretch hams.", advanced: "Palms flat on the floor, legs fully locking out." },
-          { name: "Poliquin Step-Ups", sets: 3, reps: "15 / leg", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 0], notes: "Elevate heel. Lower opposite foot to floor by bending working knee.", advanced: "Hold heavy dumbbells, completely controlled touch." },
-          { name: "Nordic Hamstring Curls", sets: 3, reps: "5", rest: 120, restStr: "2 mins", tempo: [4, 0, 1, 0], notes: "Anchor heels under heavy barbell. Lower body forward slowly.", advanced: "Full unassisted rep (lower to floor and pull back up)." }
+        "Workout 1: Lower Foundations": [
+          { name: "ATG Split Squats", sets: 4, reps: "5 / leg", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Squat shoes on. Max forward knee travel.", advanced: "Hold 50% of your bodyweight in dumbbells.", regression: "Front foot elevated on a high step/box." },
+          { name: "KOT Calf Raises", sets: 3, reps: "15", rest: 45, restStr: "45-60s", tempo: [2, 1, 1, 2], notes: "Deep knee bend, drive up onto toes.", advanced: "Single leg KOT calf raises.", regression: "Hold onto a rack heavily for support." },
+          { name: "Poliquin Step-Ups", sets: 3, reps: "15 / leg", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 0], notes: "Elevate heel. Bend knee to touch opposite heel to floor.", advanced: "Hold heavy dumbbells.", regression: "Use a lower step height." },
+          { name: "Tibialis Raises", sets: 3, reps: "25", rest: 45, restStr: "45-60s", tempo: [1, 0, 1, 2], notes: "Lean back on wall, legs straight, lift toes.", advanced: "Use a Tib-Bar.", regression: "Stand closer to the wall." }
+        ],
+        "Workout 2: Upper & Spine": [
+          { name: "Powell Raises", sets: 3, reps: "10 / arm", rest: 60, restStr: "60s", tempo: [3, 0, 1, 1], notes: "Lie on side, raise DB straight up. Bulletproofs shoulders.", advanced: "10% of bodyweight for 10 reps.", regression: "Use a very light weight or no weight." },
+          { name: "Trap-3 Raises", sets: 3, reps: "10 / arm", rest: 60, restStr: "60s", tempo: [2, 0, 1, 2], notes: "Support chest on bench, lift arm in Y-shape.", advanced: "10% of bodyweight for 10 reps.", regression: "Perform unweighted." },
+          { name: "Slant Board Jefferson Curls", sets: 3, reps: "10", rest: 60, restStr: "60-90s", tempo: [4, 0, 1, 0], notes: "Toes elevated. Round spine slowly.", advanced: "25% of bodyweight.", regression: "Flat ground, no weight." },
+          { name: "External Rotations", sets: 3, reps: "15 / arm", rest: 45, restStr: "45s", tempo: [2, 0, 1, 1], notes: "Knee supported DB external rotation.", advanced: "10% bodyweight.", regression: "Use a light resistance band." }
+        ],
+        "Workout 3: Deep Range": [
+          { name: "Cossack Squats", sets: 3, reps: "8 / side", rest: 90, restStr: "90s", tempo: [3, 0, 1, 0], notes: "Wide stance, squat down one leg, keep other straight.", advanced: "Hold a 45lb KB goblet style.", regression: "Hold onto a rack/TRX for support." },
+          { name: "Elephant Walks", sets: 3, reps: "15 / leg", rest: 60, restStr: "60s", tempo: [2, 0, 1, 1], notes: "Bend over, grab toes. Alternate straightening legs.", advanced: "Palms flat on the floor.", regression: "Place hands on a yoga block or bench." },
+          { name: "Seated Good Mornings", sets: 3, reps: "10", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 1], notes: "Wide straddle on bench, arch back, hinge forward.", advanced: "Use a barbell across back.", regression: "Bodyweight only, place hands on floor for support." },
+          { name: "DB Pullovers", sets: 3, reps: "12", rest: 60, restStr: "60s", tempo: [3, 1, 1, 0], notes: "Lie across bench, lower DB behind head.", advanced: "Massive stretch, heavy DB.", regression: "Lighter DB, don't drop as far back." }
+        ],
+        "Workout 4: Bulletproof Joints": [
+          { name: "Nordic Hamstring Eccentrics", sets: 4, reps: "5", rest: 120, restStr: "2 mins", tempo: [5, 0, 1, 0], notes: "Lower as slow as possible before catching yourself.", advanced: "Full unassisted rep.", regression: "Use a heavy band attached to a rack to pull you back up." },
+          { name: "Reverse Nordics", sets: 4, reps: "8", rest: 90, restStr: "90s", tempo: [3, 0, 1, 0], notes: "Kneel, lean back into deep quad stretch.", advanced: "Hold a plate to your chest.", regression: "Use a band attached in front of you for assistance." },
+          { name: "Garhammer Raises", sets: 3, reps: "15", rest: 60, restStr: "60s", tempo: [1, 0, 1, 2], notes: "Hang from bar, bring knees from parallel to chest.", advanced: "Add ankle weights.", regression: "Lying on floor, reverse crunches." },
+          { name: "QL Extensions", sets: 3, reps: "10 / side", rest: 60, restStr: "60s", tempo: [2, 0, 1, 1], notes: "Side bend on a 45-degree back extension machine.", advanced: "Hold a plate or DB.", regression: "Side plank hip dips on the floor." }
+        ],
+        "Workout 5: Full Integration": [
+          { name: "Patrick Step-Ups", sets: 3, reps: "15 / leg", rest: 60, restStr: "60s", tempo: [2, 0, 1, 0], notes: "Flat ground, push knee forward and touch heel.", advanced: "Hold DBs.", regression: "Hold a wall for balance." },
+          { name: "L-Sit Holds", type: "static", sets: 3, reps: "15s", holdTime: 15, rest: 60, restStr: "60s", notes: "Support on parallettes or floor, lift legs straight out.", advanced: "Hold for 30+ seconds.", regression: "Tuck knees into chest instead of straight legs." },
+          { name: "Slant Board Squats", sets: 3, reps: "15", rest: 90, restStr: "90s", tempo: [2, 0, 1, 0], notes: "Heels highly elevated, deep VMO squat.", advanced: "Hold heavy kettlebell.", regression: "Bodyweight, hold onto a rack." },
+          { name: "Seated Pancake", type: "static", sets: 1, reps: "3 mins", holdTime: 180, rest: 60, restStr: "60s trans.", notes: "Legs wide, chest to floor.", advanced: "Hold a light weight to pull you deeper.", regression: "Sit on a block to elevate hips." }
         ]
       }
     };
@@ -453,14 +467,15 @@
       "Heavy Barbell Hip Thrusts": ["Glutes"], "Heavy Slider Lateral Lunges": ["Adductors", "Quads", "Glutes"], "Heavy DB Bulgarian Split Squats": ["Quads", "Glutes"],
       "Front Split Isometrics": ["Hamstrings", "Hip Flexors"], "Heavy Single-Leg KB DL": ["Hamstrings", "Glutes", "Lower Back"],
       "Heavy Roman Chair Back Ext": ["Lower Back", "Glutes"], "Zercher Carries": ["Core", "Quads"], "Advanced Reverse Nordics": ["Quads", "Hip Flexors"],
-      "Dead Hangs": ["Upper Back / Lats"], "Elevated ATG Split Squats": ["Quads", "Hip Flexors", "Glutes"], "Banded Clamshells": ["Glutes"],
-      "90/90 Hip Transfers": ["Glutes", "Hip Flexors"], "Active Couch Stretch": ["Quads", "Hip Flexors"], "Deep Pancake Stretch": ["Adductors", "Hamstrings"],
-      "Frog/Butterfly Stretch": ["Adductors"], "Kneeling Lunge Iso-Hold": ["Hip Flexors", "Quads"], "Pigeon Pose": ["Glutes"], "90/90 Stretch": ["Glutes", "Hip Flexors"],
-      "Supine Figure 4": ["Glutes"], "Seated IT Band Twist": ["Glutes", "Lower Back"], "Cat-Cow Flow": ["Lower Back"],
-      "Child's Pose w/ Lat Stretch": ["Upper Back / Lats", "Lower Back"], "Supine Spinal Twist": ["Lower Back"], "Sphinx / Cobra Pose": ["Lower Back", "Core"],
-      "Banded Calf Stretch": ["Calves / Tibialis"], "Wall Soleus Stretch (Bent Knee)": ["Calves / Tibialis"], "Kneeling Ankle Dorsiflexion": ["Calves / Tibialis"],
-      "Resisted Backward Walking": ["Quads"], "ATG Split Squats": ["Quads", "Glutes", "Hip Flexors"], "Tibialis Raises": ["Calves / Tibialis"],
-      "Elephant Walks": ["Hamstrings", "Calves / Tibialis"]
+      "Cat-Cow Flow": ["Lower Back"], "Bird Dog": ["Core", "Glutes"], "Pigeon Pose": ["Glutes"], "Child's Pose w/ Lat Stretch": ["Upper Back / Lats", "Lower Back"],
+      "90/90 Hip Transfers": ["Glutes", "Hip Flexors"], "Thoracic Rotations": ["Upper Back / Lats", "Core"], "Deep Pancake Stretch": ["Adductors", "Hamstrings"],
+      "Active Couch Stretch": ["Quads", "Hip Flexors"], "World's Greatest Stretch": ["Hip Flexors", "Upper Back / Lats"], "Ankle Dorsiflexion Rocks": ["Calves / Tibialis"],
+      "Supine Figure 4": ["Glutes"], "Seated IT Band Twist": ["Glutes", "Lower Back"], "ATG Split Squats": ["Quads", "Glutes", "Hip Flexors"],
+      "KOT Calf Raises": ["Calves / Tibialis"], "Tibialis Raises": ["Calves / Tibialis"], "Powell Raises": ["Upper Back / Lats"], "Trap-3 Raises": ["Upper Back / Lats"],
+      "Slant Board Jefferson Curls": ["Hamstrings", "Lower Back"], "External Rotations": ["Upper Back / Lats"], "Cossack Squats": ["Quads", "Adductors"],
+      "Elephant Walks": ["Hamstrings", "Calves / Tibialis"], "DB Pullovers": ["Upper Back / Lats", "Core"], "Garhammer Raises": ["Core", "Hip Flexors"],
+      "QL Extensions": ["Core", "Lower Back"], "Patrick Step-Ups": ["Quads"], "L-Sit Holds": ["Core", "Hip Flexors"], "Slant Board Squats": ["Quads"],
+      "Seated Pancake": ["Adductors", "Hamstrings"]
     };
 
     function getMuscleGroups(exerciseName) { return explicitMuscleMap[exerciseName] || ["Other"]; }
@@ -470,17 +485,10 @@
     let activeSubDay = "Day 1: Hips & Glutes";
     let activeFilter = "dynamic"; 
     
-    // Default User Settings
-    let userSettings = {
-      name: '',
-      startDate: '',
-      theme: 'dark',
-      defaultTimer: 60,
-      timerSound: true,
-      reducedMotion: false
-    };
-    
+    // Default User Settings & Data
+    let userSettings = { name: '', startDate: '', theme: 'dark', defaultTimer: 60, timerSound: true, reducedMotion: false };
     let completedSets = {};
+    let rpeData = {};
 
     let timeLeft = 0;
     let timerActive = false;
@@ -502,11 +510,13 @@
     }
 
     function init() {
-      // Load Data
       try {
         const savedSets = localStorage.getItem('10WeekTrackerData');
         if (savedSets) completedSets = JSON.parse(savedSets);
         
+        const savedRPE = localStorage.getItem('10WeekRPEData');
+        if (savedRPE) rpeData = JSON.parse(savedRPE);
+
         const savedSettings = localStorage.getItem('10WeekSettings');
         if (savedSettings) userSettings = { ...userSettings, ...JSON.parse(savedSettings) };
       } catch (e) { }
@@ -556,34 +566,34 @@
       userSettings.timerSound = document.getElementById('setting-sound').checked;
       userSettings.reducedMotion = document.getElementById('setting-motion').checked;
 
-      try {
-        localStorage.setItem('10WeekSettings', JSON.stringify(userSettings));
-      } catch(e) {}
-
+      try { localStorage.setItem('10WeekSettings', JSON.stringify(userSettings)); } catch(e) {}
       applySettings();
       closeSettings();
     }
 
     function applySettings() {
-      // 1. Title Name
       const titleEl = document.getElementById('main-title');
       titleEl.textContent = userSettings.name ? `${userSettings.name}'s 10-Week Strength & Mobility` : "10-Week Strength & Mobility";
 
-      // 2. Reduced Motion
-      if (userSettings.reducedMotion) {
-        document.documentElement.classList.add('reduced-motion');
-      } else {
-        document.documentElement.classList.remove('reduced-motion');
-      }
+      if (userSettings.reducedMotion) { document.documentElement.classList.add('reduced-motion'); } 
+      else { document.documentElement.classList.remove('reduced-motion'); }
     }
 
     function eraseAllProgress() {
       if(confirm("Are you absolutely sure you want to erase ALL progress? This cannot be undone unless you have a backup.")) {
         completedSets = {};
+        rpeData = {};
         localStorage.removeItem('10WeekTrackerData');
+        localStorage.removeItem('10WeekRPEData');
         renderApp();
         closeSettings();
       }
+    }
+
+    function handleRPE(exerciseName, val) {
+      const key = getBaseKey(exerciseName);
+      rpeData[key] = val;
+      try { localStorage.setItem('10WeekRPEData', JSON.stringify(rpeData)); } catch(e){}
     }
     // -----------------------------
 
@@ -617,6 +627,7 @@
       
       if (!days.includes(activeSubDay)) activeSubDay = days[0];
 
+      // Draw Horizontally Scrolling Day Tabs
       const dayContainer = document.getElementById('day-tabs');
       dayContainer.innerHTML = '';
       days.forEach(day => {
@@ -626,10 +637,10 @@
           stopTempo();
           renderApp();
         };
-        btn.className = `px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all ${
+        btn.className = `shrink-0 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all snap-start ${
           activeSubDay === day 
-            ? 'bg-neutral-100 text-neutral-900' 
-            : 'border border-neutral-700 text-neutral-400 hover:bg-neutral-800'
+            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20' 
+            : 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:bg-neutral-700'
         }`;
         btn.textContent = day;
         dayContainer.appendChild(btn);
@@ -691,9 +702,22 @@
                <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider block mb-1">Advanced Standard Goal</span>
                <p class="text-sm text-neutral-300">${ex.advanced}</p>
              </div>` : '';
+             
+        const regressionHtml = ex.regression 
+          ? `<div class="mt-2 bg-emerald-900/10 border border-emerald-900/30 rounded-lg p-3">
+               <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block mb-1">Regression (Easier Option)</span>
+               <p class="text-sm text-neutral-300">${ex.regression}</p>
+             </div>` : '';
 
         const searchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(ex.name + ' exercise proper form')}`;
         const safeId = ex.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+
+        const repsMatch = ex.reps.match(/(\d+)/g);
+        const targetRepsForAudio = repsMatch ? Math.max(...repsMatch.map(Number)) : 15;
+
+        // RPE Loading
+        const baseKey = getBaseKey(ex.name);
+        const currentRPE = rpeData[baseKey] || 5;
 
         div.innerHTML = `
           <div class="flex flex-col md:flex-row justify-between gap-4">
@@ -729,6 +753,21 @@
               </div>
               <p class="text-sm text-neutral-400 leading-relaxed border-l-2 border-neutral-600 pl-3 mb-2"><strong class="text-neutral-300 font-semibold">Key Note:</strong> ${ex.notes}</p>
               ${advancedHtml}
+              ${regressionHtml}
+
+              <!-- RPE Slider -->
+              <div class="mt-4 pt-4 border-t border-neutral-700/50">
+                <div class="flex justify-between items-center mb-2">
+                  <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Rate Perceived Exertion (RPE)</label>
+                  <span class="text-xs font-bold text-orange-400 px-2 py-0.5 rounded bg-neutral-900 border border-neutral-700" id="rpe-val-${safeId}">${currentRPE}/10</span>
+                </div>
+                <input type="range" min="1" max="10" value="${currentRPE}" onchange="handleRPE('${ex.name.replace(/'/g, "\\'")}', this.value)" oninput="document.getElementById('rpe-val-${safeId}').textContent = this.value + '/10'" class="rpe-slider w-full h-1.5 bg-neutral-700 rounded-lg appearance-none cursor-pointer">
+                <div class="flex justify-between text-[9px] text-neutral-500 mt-1 font-semibold uppercase px-1">
+                  <span>Very Easy</span>
+                  <span>Max Effort</span>
+                </div>
+              </div>
+
             </div>
 
             <div class="flex flex-row md:flex-col gap-2 items-center justify-center md:justify-start md:w-auto w-full border-t md:border-t-0 md:border-l border-neutral-700 pt-4 md:pt-0 md:pl-4">
@@ -743,9 +782,13 @@
       updateProgress(exercisesInDay); 
     }
 
-    function getTrackKey(exerciseName, setIndex) {
+    function getBaseKey(exerciseName) {
       const phasePrefix = activeCategory === "Main Plan" ? activePhaseId : "static";
-      return `${activeCategory}-${phasePrefix}-${activeSubDay}-${exerciseName}-${setIndex}`;
+      return `${activeCategory}-${phasePrefix}-${activeSubDay}-${exerciseName}`;
+    }
+
+    function getTrackKey(exerciseName, setIndex) {
+      return `${getBaseKey(exerciseName)}-${setIndex}`;
     }
 
     function handleCheck(exerciseName, setIndex) {
@@ -803,7 +846,8 @@
 
     function exportProgressData() {
       try {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(completedSets));
+        const payload = { sets: completedSets, rpe: rpeData };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
         downloadAnchor.setAttribute("download", "strength_mobility_progress.json");
@@ -826,8 +870,14 @@
           try {
             const parsed = JSON.parse(readerEvent.target.result);
             if (parsed && typeof parsed === 'object') {
-              completedSets = parsed;
+              if (parsed.sets && parsed.rpe) {
+                completedSets = parsed.sets;
+                rpeData = parsed.rpe;
+              } else {
+                completedSets = parsed; 
+              }
               localStorage.setItem('10WeekTrackerData', JSON.stringify(completedSets));
+              localStorage.setItem('10WeekRPEData', JSON.stringify(rpeData));
               renderApp();
               alert("Progress successfully restored!");
             } else {
@@ -899,8 +949,14 @@
       if(confirm("Reset checkboxes for this day?")) {
         const dataNode = activeCategory === "Main Plan" ? workoutData["Main Plan"][activePhaseId] : workoutData[activeCategory];
         const exercises = dataNode[activeSubDay] || [];
-        exercises.forEach(ex => { for (let i = 0; i < ex.sets; i++) { delete completedSets[getTrackKey(ex.name, i)]; } });
-        try { localStorage.setItem('10WeekTrackerData', JSON.stringify(completedSets)); } catch(e){}
+        exercises.forEach(ex => { 
+            for (let i = 0; i < ex.sets; i++) { delete completedSets[getTrackKey(ex.name, i)]; } 
+            delete rpeData[getBaseKey(ex.name)];
+        });
+        try { 
+            localStorage.setItem('10WeekTrackerData', JSON.stringify(completedSets)); 
+            localStorage.setItem('10WeekRPEData', JSON.stringify(rpeData)); 
+        } catch(e){}
         renderApp();
       }
     }
@@ -1099,7 +1155,6 @@
       timerActive = false; 
       clearInterval(timerInterval); 
       
-      // If no custom time left, check settings for default timer value
       timeLeft = userSettings.defaultTimer ? parseInt(userSettings.defaultTimer) : 0; 
       
       currentAutoExercise = null; 
