@@ -55,9 +55,27 @@
           </button>
         </div>
       </div>
+      
       <div class="bg-blue-900/20 border border-blue-800/50 rounded-xl p-4 flex gap-3 items-start">
         <svg class="w-5 h-5 text-blue-400 shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
         <p id="phase-description" class="text-sm text-blue-100 leading-relaxed"></p>
+      </div>
+
+      <!-- Master Phase Progress Tracker -->
+      <div class="mt-6 pt-5 border-t border-neutral-700/50">
+        <div class="flex justify-between items-end mb-2">
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-indigo-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              <span id="phase-progress-title">Phase Completion</span>
+            </h3>
+            <p class="text-xs text-neutral-400 mt-0.5" id="phase-progress-text">0 of 0 sets completed</p>
+          </div>
+          <span class="text-lg font-black text-indigo-400" id="phase-progress-percent">0%</span>
+        </div>
+        <div class="h-2.5 bg-neutral-900 rounded-full overflow-hidden border border-neutral-700">
+          <div id="phase-progress-bar" class="h-full bg-indigo-500 transition-all duration-500 ease-out" style="width: 0%"></div>
+        </div>
       </div>
     </div>
 
@@ -85,7 +103,7 @@
     <!-- Category Tabs -->
     <div id="category-tabs" class="flex overflow-x-auto gap-2 custom-scrollbar pb-2 mt-4"></div>
 
-    <!-- Scrollable Day Tabs (Now with custom visible scrollbar) -->
+    <!-- Scrollable Day Tabs -->
     <div class="relative w-full border-b border-neutral-800 pb-2">
       <div id="day-tabs" class="flex overflow-x-auto gap-3 custom-scrollbar pb-4 snap-x scroll-smooth"></div>
     </div>
@@ -501,15 +519,43 @@
     let speechSequence = []; 
     
     let currentAutoExercise = null;
+    let preferredVoice = null;
+
+    function loadVoices() {
+      const voices = window.speechSynthesis.getVoices();
+      if (!voices.length) return;
+
+      const preferredNames = [
+        'Google US English', 'Google UK English Male', 'Google UK English Female',
+        'Microsoft Guy Online (Natural)', 'Microsoft Aria Online (Natural)',
+        'Samantha', 'Daniel', 'Alex', 'Fiona', 'Victoria', 'Karen', 'Moira'
+      ];
+
+      for (let name of preferredNames) {
+        preferredVoice = voices.find(v => v.name.includes(name));
+        if (preferredVoice) break;
+      }
+
+      if (!preferredVoice) {
+        preferredVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+      }
+    }
+
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
 
     function unlockSpeech() {
       if(!speechUnlocked) {
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+        const testMsg = new SpeechSynthesisUtterance('');
+        if (preferredVoice) testMsg.voice = preferredVoice;
+        window.speechSynthesis.speak(testMsg);
         speechUnlocked = true;
       }
     }
 
     function init() {
+      loadVoices();
       try {
         const savedSets = localStorage.getItem('10WeekTrackerData');
         if (savedSets) completedSets = JSON.parse(savedSets);
@@ -619,6 +665,48 @@
         btn.textContent = cat;
         catContainer.appendChild(btn);
       });
+    }
+
+    function updatePhaseProgress() {
+      const phaseId = activePhaseId; 
+      const phaseData = workoutData["Main Plan"][phaseId];
+      
+      let totalPhaseSets = 0;
+      let completedPhaseSets = 0;
+
+      if (phaseData && activeCategory === "Main Plan") {
+        for (const [dayName, exercises] of Object.entries(phaseData)) {
+          exercises.forEach(ex => {
+            totalPhaseSets += ex.sets;
+            for (let i = 0; i < ex.sets; i++) {
+              const key = `Main Plan-${phaseId}-${dayName}-${ex.name}-${i}`;
+              if (completedSets[key]) {
+                completedPhaseSets++;
+              }
+            }
+          });
+        }
+      }
+
+      const percent = totalPhaseSets === 0 ? 0 : Math.round((completedPhaseSets / totalPhaseSets) * 100);
+      
+      const phaseObj = phases.find(p => p.id === phaseId);
+      const phaseNameShort = phaseObj ? phaseObj.name.split(':')[0] : 'Phase';
+      
+      document.getElementById('phase-progress-title').textContent = `${phaseNameShort} Completion`;
+      document.getElementById('phase-progress-text').textContent = `${completedPhaseSets} of ${totalPhaseSets} sets completed`;
+      document.getElementById('phase-progress-percent').textContent = `${percent}%`;
+      
+      const bar = document.getElementById('phase-progress-bar');
+      bar.style.width = `${percent}%`;
+      
+      if (percent === 100 && totalPhaseSets > 0) {
+        bar.classList.replace('bg-indigo-500', 'bg-green-500');
+        document.getElementById('phase-progress-percent').classList.replace('text-indigo-400', 'text-green-400');
+      } else {
+        bar.classList.replace('bg-green-500', 'bg-indigo-500');
+        document.getElementById('phase-progress-percent').classList.replace('text-green-400', 'text-indigo-400');
+      }
     }
 
     function renderApp() {
@@ -921,6 +1009,7 @@
 
     function updateProgress(fullDayExercises) {
       updateTotalVolume(fullDayExercises);
+      updatePhaseProgress();
       
       let totalSets = 0; let completedSetsCount = 0;
       fullDayExercises.forEach(ex => {
@@ -964,7 +1053,9 @@
     function speakText(text) {
       window.speechSynthesis.cancel();
       const msg = new SpeechSynthesisUtterance(text);
-      msg.rate = 1.5; 
+      if (preferredVoice) msg.voice = preferredVoice;
+      msg.rate = 1.2; 
+      msg.pitch = 1.0;
       window.speechSynthesis.speak(msg);
     }
 
