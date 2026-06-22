@@ -33,6 +33,7 @@
       </div>
     </div>
 
+    <!-- Timer Sticky Bar -->
     <div class="sticky top-4 z-50 bg-neutral-800 border border-neutral-700 rounded-2xl p-4 shadow-2xl flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <svg id="timer-icon" class="w-6 h-6 text-neutral-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -78,6 +79,7 @@
         <div id="progress-bar" class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-500 ease-out rounded-full" style="width: 0%"></div>
       </div>
       
+      <!-- Type Switcher Tabs (Dynamic vs Static) -->
       <div id="type-tabs" class="flex gap-2 mt-5"></div>
     </div>
 
@@ -88,6 +90,7 @@
         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset checkboxes for this day
       </button>
 
+      <!-- Progress Backup / Restore Controls -->
       <div class="flex gap-3 border-t border-neutral-800 pt-4 w-full justify-center">
         <button onclick="exportProgressData()" class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-xs font-bold text-neutral-400 flex items-center gap-1.5 transition-colors">
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Progress
@@ -355,6 +358,8 @@
     let activeTempoButtonId = null;
     let speechUnlocked = false;
     let speechSequence = []; 
+    
+    let currentAutoExercise = null;
 
     function unlockSpeech() {
       if(!speechUnlocked) {
@@ -492,9 +497,6 @@
         const searchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(ex.name + ' exercise proper form')}`;
         const safeId = ex.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
 
-        const repsMatch = ex.reps.match(/(\d+)/g);
-        const targetRepsForAudio = repsMatch ? Math.max(...repsMatch.map(Number)) : 15;
-
         div.innerHTML = `
           <div class="flex flex-col md:flex-row justify-between gap-4">
             
@@ -522,7 +524,7 @@
                 </button>` : ''}
 
                 ${ex.tempo ? `
-                <button id="tempo-btn-${safeId}" data-orig-text="Tempo: ${ex.tempo.join('-')}" onclick="toggleTempo('${safeId}', ${ex.tempo[0]}, ${ex.tempo[1]}, ${ex.tempo[2]}, ${ex.tempo[3]}, ${targetRepsForAudio}, ${ex.rest || 0}, '${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1 px-2 py-1 bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-800/50 text-xs font-bold rounded transition-colors shadow-sm">
+                <button id="tempo-btn-${safeId}" data-orig-text="Tempo: ${ex.tempo.join('-')}" onclick="startTempoFromButton('${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1 px-2 py-1 bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-800/50 text-xs font-bold rounded transition-colors shadow-sm">
                   <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                   Tempo: ${ex.tempo.join('-')}
                 </button>` : ''}
@@ -555,27 +557,49 @@
       renderApp();
     }
 
-    function autoCheckNextSet(exerciseName) {
+    function getExerciseDetails(exerciseName) {
       const dataNode = activeCategory === "Main Plan" ? workoutData["Main Plan"][activePhaseId] : workoutData[activeCategory];
       const exercisesInDay = dataNode[activeSubDay] || [];
-      const ex = exercisesInDay.find(e => e.name === exerciseName);
-      if(!ex) return;
+      return exercisesInDay.find(e => e.name === exerciseName);
+    }
+
+    function autoCheckNextSet(exerciseName) {
+      const ex = getExerciseDetails(exerciseName);
+      if(!ex) return { checked: false, allDone: true };
+
+      let checkedSomething = false;
+      let completedCount = 0;
 
       for (let i = 0; i < ex.sets; i++) {
         const key = getTrackKey(exerciseName, i);
-        if (!completedSets[key]) {
-          completedSets[key] = true;
-          try { localStorage.setItem('10WeekTrackerData', JSON.stringify(completedSets)); } catch(e){}
-          renderApp();
-          break; 
+        if (completedSets[key]) {
+            completedCount++;
+        } else if (!checkedSomething) {
+            completedSets[key] = true;
+            checkedSomething = true;
+            completedCount++;
+            try { localStorage.setItem('10WeekTrackerData', JSON.stringify(completedSets)); } catch(e){}
         }
       }
+      renderApp();
+      return { checked: checkedSomething, allDone: (completedCount === ex.sets) };
     }
 
     function startExerciseTimer(seconds, exerciseName) {
       startTimer(seconds);
-      if(exerciseName) {
-        autoCheckNextSet(exerciseName);
+      const ex = getExerciseDetails(exerciseName);
+      
+      if(ex) {
+         const status = autoCheckNextSet(exerciseName);
+         
+         if (status.allDone) {
+             currentAutoExercise = null; 
+             if (status.checked) {
+                setTimeout(() => speakText("Exercise complete."), 1500);
+             }
+         } else {
+             currentAutoExercise = ex; 
+         }
       }
     }
 
@@ -623,7 +647,6 @@
     function updateTotalVolume(fullDayExercises) {
       const volumeData = { "Quads": 0, "Hamstrings": 0, "Glutes": 0, "Adductors": 0, "Hip Flexors": 0, "Lower Back": 0, "Upper Back / Lats": 0, "Core": 0, "Calves / Tibialis": 0 };
       
-      // Calculate ONLY for the currently displayed day
       fullDayExercises.forEach(ex => {
         if (ex.type === 'static') return; 
         const targetMuscles = getMuscleGroups(ex.name);
@@ -693,18 +716,28 @@
       window.speechSynthesis.speak(msg);
     }
 
-    function toggleTempo(safeId, ecc, bot, con, top, reps, restTime, exerciseName) {
+    function startTempoFromButton(exerciseName) {
+      const ex = getExerciseDetails(exerciseName);
+      if(ex) {
+         startTempoLoop(ex, false); 
+      }
+    }
+
+    function startTempoLoop(ex, withCountdown = false) {
       unlockSpeech();
+      const safeId = ex.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
       const btnId = 'tempo-btn-' + safeId;
       
-      if(isTempoRunning && activeTempoButtonId === btnId) {
+      if(isTempoRunning && activeTempoButtonId === btnId && !withCountdown) {
         stopTempo();
+        currentAutoExercise = null; 
         return;
       }
       stopTempo();
       
       isTempoRunning = true;
       activeTempoButtonId = btnId;
+      currentAutoExercise = ex; 
       
       const btn = document.getElementById(btnId);
       if(btn) {
@@ -714,47 +747,69 @@
         btn.innerHTML = `<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Stop Tempo Voice`;
       }
 
+      // Determine which set we are about to start based on checked boxes
+      let currentSetNum = ex.sets; // default to max if all done
+      for (let i = 0; i < ex.sets; i++) {
+        if (!completedSets[getTrackKey(ex.name, i)]) {
+          currentSetNum = i + 1;
+          break;
+        }
+      }
+
       speechSequence = [];
+      
+      // Inject Set Announcer
+      if (withCountdown) {
+          speechSequence.push(`Set ${currentSetNum} starting in 3`);
+          speechSequence.push("2");
+          speechSequence.push("1");
+      } else {
+          speechSequence.push(`Set ${currentSetNum} starting`);
+      }
+
+      const ecc = ex.tempo[0];
+      const bot = ex.tempo[1];
+      const con = ex.tempo[2];
+      const top = ex.tempo[3];
+      const repsMatch = ex.reps.match(/(\d+)/g);
+      const reps = repsMatch ? Math.max(...repsMatch.map(Number)) : 15;
+
       for (let r = 1; r <= reps; r++) {
-         if (ecc > 0) {
-             speechSequence.push("Down");
-             for(let i=2; i<=ecc; i++) speechSequence.push(i.toString());
-         }
-         if (bot > 0) {
-             speechSequence.push("Hold");
-             for(let i=2; i<=bot; i++) speechSequence.push(i.toString());
-         }
-         if (con > 0) {
-             speechSequence.push("Up");
-             for(let i=2; i<=con; i++) speechSequence.push(i.toString());
-         }
-         if (top > 0) {
-             speechSequence.push("Squeeze");
-             for(let i=2; i<=top; i++) speechSequence.push(i.toString());
-         }
+         if (ecc > 0) { speechSequence.push("Down"); for(let i=2; i<=ecc; i++) speechSequence.push(i.toString()); }
+         if (bot > 0) { speechSequence.push("Hold"); for(let i=2; i<=bot; i++) speechSequence.push(i.toString()); }
+         if (con > 0) { speechSequence.push("Up");   for(let i=2; i<=con; i++) speechSequence.push(i.toString()); }
+         if (top > 0) { speechSequence.push("Squeeze"); for(let i=2; i<=top; i++) speechSequence.push(i.toString()); }
          speechSequence.push(`${r} rep`);
       }
       speechSequence.push("Set completed");
 
-      function nextTick() {
-        if(!isTempoRunning) return;
+      tempoNextTick(); 
+      tempoIntervalSpeech = setInterval(tempoNextTick, 1000); 
+    }
 
-        if (speechSequence.length === 0) {
-          stopTempo(); 
-          if (restTime && restTime > 0) {
-             startExerciseTimer(restTime, exerciseName); 
-          } else {
-             autoCheckNextSet(exerciseName); 
-          }
-          return;
+    function tempoNextTick() {
+      if(!isTempoRunning) return;
+
+      if (speechSequence.length === 0) {
+        const ex = currentAutoExercise;
+        stopTempo(); 
+        
+        if (ex && ex.rest && ex.rest > 0) {
+           startExerciseTimer(ex.rest, ex.name); 
+        } else if (ex) {
+           const status = autoCheckNextSet(ex.name);
+           if (status.allDone) {
+               currentAutoExercise = null;
+               if(status.checked) setTimeout(() => speakText("Exercise complete."), 1000);
+           } else {
+               startTempoLoop(ex, true);
+           }
         }
-
-        const phrase = speechSequence.shift();
-        speakText(phrase);
+        return;
       }
 
-      nextTick(); 
-      tempoIntervalSpeech = setInterval(nextTick, 1000); 
+      const phrase = speechSequence.shift();
+      speakText(phrase);
     }
 
     function stopTempo() {
@@ -815,8 +870,21 @@
     }
 
     function timerTick() {
-      if (timeLeft > 0) { timeLeft--; updateTimerUI(); } 
-      else if (timeLeft === 0 && timerActive) { timerActive = false; clearInterval(timerInterval); playBeep(); updateTimerUI(); }
+      if (timeLeft > 0) { 
+          timeLeft--; 
+          updateTimerUI(); 
+      } else if (timeLeft === 0 && timerActive) { 
+          timerActive = false; 
+          clearInterval(timerInterval); 
+          
+          if (currentAutoExercise && currentAutoExercise.tempo) {
+              startTempoLoop(currentAutoExercise, true);
+          } else {
+              playBeep(); 
+          }
+          
+          updateTimerUI(); 
+      }
     }
 
     function startTimer(seconds) {
@@ -832,7 +900,13 @@
       updateTimerUI();
     }
 
-    function resetTimer() { timerActive = false; clearInterval(timerInterval); timeLeft = 0; updateTimerUI(); }
+    function resetTimer() { 
+      timerActive = false; 
+      clearInterval(timerInterval); 
+      timeLeft = 0; 
+      currentAutoExercise = null; 
+      updateTimerUI(); 
+    }
 
     window.onload = init;
   </script>
