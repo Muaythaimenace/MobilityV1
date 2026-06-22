@@ -3,20 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>10-Week Strength & Mobility Tracker</title>
+  <title>Strength & Mobility | Hextech Interface</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Hide scrollbar for clean horizontal scrolling */
+    /* Hextech Font Imports (System fonts adjusted for sharp UI) */
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      background-color: #010a13; /* Deep Abyssal Blue */
+      color: #f0e6d2; /* Parchment/Gold-white text */
+    }
+    
+    /* Scrollbars - Hextech Style */
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    body { font-family: system-ui, -apple-system, sans-serif; }
     
-    /* Custom visible scrollbar for tabs */
-    .custom-scrollbar::-webkit-scrollbar { height: 8px; }
-    .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #525252 #171717; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #171717; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #525252; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #737373; }
+    .custom-scrollbar::-webkit-scrollbar { height: 6px; }
+    .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #c89b3c #010a13; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #010a13; border-radius: 0px; border-bottom: 1px solid #1e2328; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #c89b3c; border-radius: 0px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #f0e6d2; }
 
     /* Reduced motion override class */
     .reduced-motion * {
@@ -25,184 +30,216 @@
       transition-duration: 0.001ms !important;
     }
 
-    /* RPE slider accent */
+    /* RPE slider Hextech Accent */
     input[type=range].rpe-slider {
-      accent-color: #f97316;
+      accent-color: #0ac8b9;
+      background: #1e2328;
+    }
+
+    /* Sharp Custom Styles */
+    .hex-panel {
+      background: #091428;
+      border: 1px solid #1e2328;
+      border-top: 2px solid #c89b3c; /* Gold Top Accent */
+      border-radius: 2px;
+    }
+
+    .hex-glow-cyan {
+      box-shadow: 0 0 10px rgba(10, 200, 185, 0.4);
+    }
+    
+    .hex-glow-gold {
+      box-shadow: 0 0 10px rgba(200, 155, 60, 0.4);
+    }
+
+    .hex-text-glow {
+      text-shadow: 0 0 8px rgba(10, 200, 185, 0.6);
+    }
+    
+    .tab-active {
+      border-bottom: 2px solid #c89b3c;
+      color: #c89b3c;
+      background: linear-gradient(to top, rgba(200,155,60,0.1) 0%, transparent 100%);
+    }
+
+    .tab-inactive {
+      border-bottom: 2px solid transparent;
+      color: #a09b8c;
+    }
+    
+    .tab-inactive:hover {
+      color: #f0e6d2;
+      border-bottom: 2px solid #4a545c;
     }
   </style>
 </head>
-<body class="bg-neutral-900 text-neutral-100 min-h-screen pb-24">
+<body class="min-h-screen pb-24 tracking-wide antialiased">
   <div class="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
     
-    <!-- Header Section -->
-    <div class="bg-neutral-800 border border-neutral-700 rounded-2xl p-6 shadow-xl">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <!-- Top HUD Banner -->
+    <div class="hex-panel p-5 shadow-2xl relative overflow-hidden">
+      <!-- Background subtle accent -->
+      <div class="absolute top-0 right-0 w-64 h-64 bg-[#0ac8b9] opacity-[0.03] rounded-full blur-3xl pointer-events-none"></div>
+      
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5 relative z-10">
         <div>
           <div class="flex items-center gap-3">
-            <h1 id="main-title" class="text-2xl font-bold text-white tracking-tight">10-Week Strength & Mobility</h1>
+            <h1 id="main-title" class="text-2xl font-black uppercase tracking-widest text-[#f0e6d2]">10-Week Protocol</h1>
           </div>
-          <p class="text-neutral-400 text-sm mt-1">Rebuild glutes, back, and hips for full splits.</p>
+          <p class="text-[#a09b8c] text-xs uppercase tracking-wider mt-1 font-semibold">Rebuild glutes, back, and hips for full splits.</p>
         </div>
         <div class="flex items-end gap-3 w-full md:w-auto">
           <div class="w-full md:w-56">
-            <label class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mb-1 block">Current Phase</label>
-            <select id="phase-selector" class="w-full bg-neutral-900 border border-neutral-700 text-white rounded-lg p-2.5 outline-none focus:border-blue-500 transition-colors cursor-pointer">
+            <label class="text-[10px] text-[#0ac8b9] font-black uppercase tracking-[0.15em] mb-1.5 block">Target Phase</label>
+            <select id="phase-selector" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] rounded-none p-2 outline-none focus:border-[#0ac8b9] transition-colors cursor-pointer text-sm font-semibold tracking-wide appearance-none uppercase">
               </select>
           </div>
           <!-- Settings / Account Button -->
-          <button onclick="openSettings()" class="shrink-0 p-2.5 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-neutral-300 transition-colors h-11 w-11 flex items-center justify-center border border-neutral-600" title="Settings & Data">
-            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <button onclick="openSettings()" class="shrink-0 p-2 bg-[#010a13] hover:bg-[#1e2328] border border-[#1e2328] hover:border-[#c89b3c] text-[#a09b8c] hover:text-[#c89b3c] transition-all h-10 w-10 flex items-center justify-center hex-glow-gold" title="Settings & Data">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </button>
         </div>
       </div>
       
-      <div class="bg-blue-900/20 border border-blue-800/50 rounded-xl p-4 flex gap-3 items-start">
-        <svg class="w-5 h-5 text-blue-400 shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-        <p id="phase-description" class="text-sm text-blue-100 leading-relaxed"></p>
+      <div class="bg-[#010a13] border-l-2 border-[#0ac8b9] p-3 flex gap-3 items-start relative z-10">
+        <p id="phase-description" class="text-xs text-[#a09b8c] leading-relaxed font-medium uppercase tracking-wide"></p>
       </div>
 
       <!-- Master Phase Progress Tracker -->
-      <div class="mt-6 pt-5 border-t border-neutral-700/50">
+      <div class="mt-5 pt-4 border-t border-[#1e2328] relative z-10">
         <div class="flex justify-between items-end mb-2">
           <div>
-            <h3 class="text-sm font-bold text-white flex items-center gap-1.5">
-              <svg class="w-4 h-4 text-indigo-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <h3 class="text-[11px] font-black text-[#f0e6d2] uppercase tracking-[0.1em] flex items-center gap-2">
+              <span class="w-1.5 h-1.5 bg-[#c89b3c] block rotate-45"></span>
               <span id="phase-progress-title">Phase Completion</span>
             </h3>
-            <p class="text-xs text-neutral-400 mt-0.5" id="phase-progress-text">0 of 0 sets completed</p>
+            <p class="text-[10px] text-[#a09b8c] mt-1 font-bold uppercase tracking-wider" id="phase-progress-text">0 of 0 sets</p>
           </div>
-          <span class="text-lg font-black text-indigo-400" id="phase-progress-percent">0%</span>
+          <span class="text-xl font-black text-[#c89b3c] tracking-tighter" id="phase-progress-percent">0%</span>
         </div>
-        <div class="h-2.5 bg-neutral-900 rounded-full overflow-hidden border border-neutral-700">
-          <div id="phase-progress-bar" class="h-full bg-indigo-500 transition-all duration-500 ease-out" style="width: 0%"></div>
+        <div class="h-1.5 bg-[#010a13] border border-[#1e2328] w-full mt-1">
+          <div id="phase-progress-bar" class="h-full bg-[#c89b3c] transition-all duration-500 ease-out hex-glow-gold" style="width: 0%"></div>
         </div>
       </div>
     </div>
 
-    <!-- Timer Sticky Bar -->
-    <div class="sticky top-4 z-50 bg-neutral-800 border border-neutral-700 rounded-2xl p-4 shadow-2xl flex flex-wrap md:flex-nowrap items-center justify-between gap-4">
-      <div class="flex items-center gap-3">
-        <svg id="timer-icon" class="w-6 h-6 text-neutral-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span id="timer-display" class="text-3xl font-mono font-bold tracking-wider w-24">0:00</span>
+    <!-- Master Timer Console -->
+    <div class="sticky top-4 z-50 hex-panel p-3 shadow-2xl flex flex-wrap md:flex-nowrap items-center justify-between gap-4 border-l-4 border-l-[#0ac8b9]">
+      <div class="flex items-center gap-3 pl-2">
+        <svg id="timer-icon" class="w-5 h-5 text-[#4a545c]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="timer-display" class="text-3xl font-black tracking-widest w-24 text-[#f0e6d2]">0:00</span>
       </div>
       <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
-        <button onclick="startTimer(60)" class="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors">60s</button>
-        <button onclick="startTimer(90)" class="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors">90s</button>
-        <button onclick="startTimer(180)" class="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-sm font-semibold whitespace-nowrap transition-colors">3m</button>
-        <div class="w-px h-8 bg-neutral-600 mx-2 self-center"></div>
-        <button id="toggle-timer-btn" onclick="toggleTimer()" class="p-2 rounded-lg transition-colors bg-green-500/20 text-green-400 hover:bg-green-500/30">
-          <svg id="play-icon" class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          <svg id="pause-icon" class="w-5 h-5 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        <button onclick="startTimer(60)" class="px-4 py-1.5 bg-[#010a13] border border-[#1e2328] hover:border-[#0ac8b9] text-[#a09b8c] hover:text-[#0ac8b9] text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all">60s</button>
+        <button onclick="startTimer(90)" class="px-4 py-1.5 bg-[#010a13] border border-[#1e2328] hover:border-[#0ac8b9] text-[#a09b8c] hover:text-[#0ac8b9] text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all">90s</button>
+        <button onclick="startTimer(180)" class="px-4 py-1.5 bg-[#010a13] border border-[#1e2328] hover:border-[#0ac8b9] text-[#a09b8c] hover:text-[#0ac8b9] text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all">3m</button>
+        <div class="w-px h-6 bg-[#1e2328] mx-2 self-center"></div>
+        <button id="toggle-timer-btn" onclick="toggleTimer()" class="px-3 py-1.5 transition-all bg-[#0ac8b9]/10 border border-[#0ac8b9] text-[#0ac8b9] hover:bg-[#0ac8b9]/20 hex-glow-cyan uppercase text-xs font-black tracking-wider flex items-center gap-1.5">
+          <svg id="play-icon" class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <svg id="pause-icon" class="w-3.5 h-3.5 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
         </button>
-        <button onclick="resetTimer()" class="p-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg transition-colors text-neutral-300">
-          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        <button onclick="resetTimer()" class="p-1.5 bg-[#010a13] border border-[#1e2328] hover:border-[#e84057] text-[#4a545c] hover:text-[#e84057] transition-all">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
         </button>
       </div>
     </div>
 
-    <!-- Category Tabs -->
-    <div id="category-tabs" class="flex overflow-x-auto gap-2 custom-scrollbar pb-2 mt-4"></div>
-
-    <!-- Scrollable Day Tabs -->
-    <div class="relative w-full border-b border-neutral-800 pb-2">
-      <div id="day-tabs" class="flex overflow-x-auto gap-3 custom-scrollbar pb-4 snap-x scroll-smooth"></div>
+    <!-- Navigation Hub -->
+    <div class="mt-8">
+      <!-- Category Tabs -->
+      <div id="category-tabs" class="flex overflow-x-auto gap-1 custom-scrollbar pb-1"></div>
+      
+      <!-- Day Tabs -->
+      <div class="bg-[#091428] border border-[#1e2328] mt-2 p-1">
+        <div id="day-tabs" class="flex overflow-x-auto gap-1 custom-scrollbar pb-2 snap-x scroll-smooth"></div>
+      </div>
     </div>
 
-    <!-- Volume Tracker -->
-    <div class="bg-neutral-800 border border-neutral-700 rounded-2xl p-5 shadow-lg my-4">
-      <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
-        <svg class="w-5 h-5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M14 14V7"/><path d="M10 14v-4"/><path d="M6 14v-2"/><path d="M18 14v-6"/></svg>
-        Daily Volume Completed (Sets)
-      </h3>
-      <div id="volume-stats" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2"></div>
-    </div>
-
-    <!-- Active Day Progress & Switcher -->
-    <div class="bg-neutral-800 border border-neutral-700 rounded-2xl p-5 shadow-lg">
-      <div class="flex justify-between items-end mb-3">
+    <!-- Active Routine Status -->
+    <div class="hex-panel p-5 shadow-lg mt-6">
+      <div class="flex justify-between items-end mb-4 border-b border-[#1e2328] pb-4">
         <div>
-          <h2 id="current-day-title" class="text-xl font-bold text-white"></h2>
-          <p id="progress-text" class="text-neutral-400 text-sm mt-1">0 of 0 sets completed</p>
+          <h2 id="current-day-title" class="text-xl font-black uppercase text-[#f0e6d2] tracking-wider"></h2>
+          <p id="progress-text" class="text-[#c89b3c] text-[10px] font-bold mt-1 uppercase tracking-widest">0 of 0 sets completed</p>
         </div>
-        <span id="done-badge" class="hidden items-center gap-1 text-green-400 text-sm font-bold animate-pulse">
-          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> DONE
+        <span id="done-badge" class="hidden items-center gap-1.5 text-[#0ac8b9] text-xs font-black uppercase tracking-widest animate-pulse hex-text-glow">
+          <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> SECURED
         </span>
       </div>
-      <div class="h-4 bg-neutral-900 rounded-full overflow-hidden relative border border-neutral-700">
-        <div id="progress-bar" class="absolute top-0 left-0 h-full bg-blue-500 transition-all duration-500 ease-out rounded-full" style="width: 0%"></div>
+      
+      <div class="h-1 bg-[#010a13] border border-[#1e2328] w-full">
+        <div id="progress-bar" class="h-full bg-[#0ac8b9] transition-all duration-500 ease-out hex-glow-cyan" style="width: 0%"></div>
       </div>
       
       <!-- Type Switcher Tabs (Dynamic vs Static) -->
       <div id="type-tabs" class="flex gap-2 mt-5"></div>
     </div>
 
+    <!-- Exercise Roster -->
     <div id="exercise-list" class="space-y-4 mt-6"></div>
     
-    <div id="reset-day-container" class="pt-6 flex flex-col items-center gap-4">
-      <button onclick="resetCurrentDay()" class="text-neutral-500 hover:text-red-400 text-sm font-semibold flex items-center gap-2 transition-colors">
-        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset checkboxes for this routine
+    <div id="reset-day-container" class="pt-8 flex flex-col items-center gap-5">
+      <button onclick="resetCurrentDay()" class="text-[#a09b8c] hover:text-[#e84057] text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors">
+        <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Initialize Hard Reset
       </button>
 
       <!-- Progress Backup / Restore Controls -->
-      <div class="flex gap-3 border-t border-neutral-800 pt-4 w-full justify-center">
-        <button onclick="exportProgressData()" class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-xs font-bold text-neutral-400 flex items-center gap-1.5 transition-colors">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Progress
+      <div class="flex gap-3 border-t border-[#1e2328] pt-5 w-full justify-center">
+        <button onclick="exportProgressData()" class="px-5 py-2 bg-[#010a13] hover:bg-[#1e2328] border border-[#1e2328] hover:border-[#c89b3c] text-[10px] font-black uppercase tracking-widest text-[#a09b8c] hover:text-[#c89b3c] flex items-center gap-2 transition-all">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Data
         </button>
-        <button onclick="importProgressData()" class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-xs font-bold text-neutral-400 flex items-center gap-1.5 transition-colors">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import Backup
+        <button onclick="importProgressData()" class="px-5 py-2 bg-[#010a13] hover:bg-[#1e2328] border border-[#1e2328] hover:border-[#0ac8b9] text-[10px] font-black uppercase tracking-widest text-[#a09b8c] hover:text-[#0ac8b9] flex items-center gap-2 transition-all">
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import Logic
         </button>
       </div>
     </div>
 
   </div>
 
-  <!-- Account / Settings Modal -->
-  <div id="settings-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] hidden backdrop-blur-sm p-4">
-    <div class="bg-[#1a1c23] w-full max-w-2xl rounded-2xl shadow-2xl border border-neutral-700/50 flex flex-col max-h-[90vh]">
+  <!-- Settings Modal (Hextech Version) -->
+  <div id="settings-modal" class="fixed inset-0 bg-[#010a13]/90 flex items-center justify-center z-[100] hidden backdrop-blur-md p-4">
+    <div class="hex-panel w-full max-w-2xl flex flex-col max-h-[90vh]">
       
       <!-- Modal Header -->
-      <div class="flex justify-between items-start p-6 pb-2 border-b border-neutral-800/50">
+      <div class="flex justify-between items-start p-6 pb-4 border-b border-[#1e2328]">
         <div>
-          <span class="text-[#f97316] text-[10px] font-black uppercase tracking-[0.2em]">Make it yours</span>
-          <h2 class="text-2xl font-bold text-white mt-1">Settings & data</h2>
+          <span class="text-[#c89b3c] text-[10px] font-black uppercase tracking-[0.2em]">Configure</span>
+          <h2 class="text-2xl font-black uppercase text-[#f0e6d2] mt-1">System Settings</h2>
         </div>
-        <button onclick="closeSettings()" class="text-neutral-400 hover:text-white bg-neutral-800 hover:bg-neutral-700 p-1.5 rounded-full transition-colors border border-neutral-700">
+        <button onclick="closeSettings()" class="text-[#a09b8c] hover:text-[#e84057] bg-[#010a13] border border-[#1e2328] hover:border-[#e84057] p-2 transition-colors">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
 
       <!-- Modal Body -->
-      <div class="p-6 space-y-8 overflow-y-auto hide-scrollbar">
+      <div class="p-6 space-y-8 overflow-y-auto custom-scrollbar bg-[#010a13]/50">
         
-        <!-- Profile -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label class="block text-xs font-bold text-neutral-300 mb-2">Name</label>
-            <input type="text" id="setting-name" class="w-full bg-[#111216] border border-neutral-700 text-white rounded-lg p-2.5 outline-none focus:border-orange-500 transition-colors placeholder-neutral-600" placeholder="e.g. Sal">
+            <label class="block text-[10px] font-black uppercase tracking-wider text-[#a09b8c] mb-2">Operative Name</label>
+            <input type="text" id="setting-name" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] p-2.5 outline-none focus:border-[#0ac8b9] transition-colors text-sm font-bold placeholder-[#4a545c]" placeholder="e.g. Sal">
           </div>
           <div>
-            <label class="block text-xs font-bold text-neutral-300 mb-2">Program start</label>
-            <input type="date" id="setting-date" class="w-full bg-[#111216] border border-neutral-700 text-white rounded-lg p-2.5 outline-none focus:border-orange-500 transition-colors [color-scheme:dark]">
+            <label class="block text-[10px] font-black uppercase tracking-wider text-[#a09b8c] mb-2">Initialization Date</label>
+            <input type="date" id="setting-date" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] p-2.5 outline-none focus:border-[#0ac8b9] transition-colors text-sm font-bold [color-scheme:dark]">
           </div>
         </div>
 
-        <hr class="border-neutral-800/50">
+        <hr class="border-[#1e2328]">
 
-        <!-- Experience -->
         <div>
-          <h3 class="text-sm font-bold text-white mb-4">Experience</h3>
+          <h3 class="text-sm font-black uppercase tracking-wider text-[#c89b3c] mb-4">Interface Preferences</h3>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <label class="block text-xs font-bold text-neutral-300 mb-2">Theme</label>
-              <select id="setting-theme" class="w-full bg-[#111216] border border-neutral-700 text-white rounded-lg p-2.5 outline-none focus:border-orange-500 transition-colors cursor-pointer">
-                <option value="dark">Dark</option>
-                <option value="light">Light (Coming Soon)</option>
+              <label class="block text-[10px] font-black uppercase tracking-wider text-[#a09b8c] mb-2">Visual Theme</label>
+              <select id="setting-theme" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] p-2.5 outline-none focus:border-[#0ac8b9] transition-colors text-sm font-bold cursor-pointer appearance-none">
+                <option value="dark">Hextech Dark</option>
               </select>
             </div>
             <div>
-              <label class="block text-xs font-bold text-neutral-300 mb-2">Default timer</label>
-              <select id="setting-timer" class="w-full bg-[#111216] border border-neutral-700 text-white rounded-lg p-2.5 outline-none focus:border-orange-500 transition-colors cursor-pointer">
+              <label class="block text-[10px] font-black uppercase tracking-wider text-[#a09b8c] mb-2">Default Rest Duration</label>
+              <select id="setting-timer" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] p-2.5 outline-none focus:border-[#0ac8b9] transition-colors text-sm font-bold cursor-pointer appearance-none">
                 <option value="60">60 seconds</option>
                 <option value="90">90 seconds</option>
                 <option value="120">2 minutes</option>
@@ -211,66 +248,50 @@
             </div>
           </div>
 
-          <div class="space-y-5">
+          <div class="space-y-6">
             <div class="flex items-center justify-between">
               <div>
-                <h4 class="text-sm font-bold text-white">Timer sound</h4>
-                <p class="text-xs text-neutral-400 mt-0.5">Play a chime when time expires</p>
+                <h4 class="text-xs font-black uppercase tracking-wider text-[#f0e6d2]">Audio Telemetry</h4>
+                <p class="text-[10px] text-[#a09b8c] mt-1 font-semibold">Play chime on timer exhaustion</p>
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" id="setting-sound" class="sr-only peer">
-                <div class="w-11 h-6 bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-300 peer-checked:after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#f97316]"></div>
+                <div class="w-10 h-5 bg-[#010a13] border border-[#1e2328] peer-focus:outline-none peer peer-checked:after:translate-x-full peer-checked:after:border-[#0ac8b9] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#4a545c] peer-checked:after:bg-[#0ac8b9] after:border after:border-transparent after:h-4 after:w-4 after:transition-all peer-checked:bg-[#0ac8b9]/20 peer-checked:border-[#0ac8b9] hex-glow-cyan"></div>
               </label>
             </div>
             
             <div class="flex items-center justify-between">
               <div>
-                <h4 class="text-sm font-bold text-white">Reduced motion</h4>
-                <p class="text-xs text-neutral-400 mt-0.5">Limit nonessential animation</p>
+                <h4 class="text-xs font-black uppercase tracking-wider text-[#f0e6d2]">Reduced Motion</h4>
+                <p class="text-[10px] text-[#a09b8c] mt-1 font-semibold">Disable glowing and animations</p>
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" id="setting-motion" class="sr-only peer">
-                <div class="w-11 h-6 bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-300 peer-checked:after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#f97316]"></div>
+                <div class="w-10 h-5 bg-[#010a13] border border-[#1e2328] peer-focus:outline-none peer peer-checked:after:translate-x-full peer-checked:after:border-[#0ac8b9] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#4a545c] peer-checked:after:bg-[#0ac8b9] after:border after:border-transparent after:h-4 after:w-4 after:transition-all peer-checked:bg-[#0ac8b9]/20 peer-checked:border-[#0ac8b9]"></div>
               </label>
             </div>
           </div>
         </div>
 
-        <hr class="border-neutral-800/50">
-
-        <!-- Backup & restore -->
-        <div>
-          <h3 class="text-sm font-bold text-white mb-4">Backup & restore</h3>
-          <div class="flex gap-3">
-            <button onclick="exportProgressData()" class="px-4 py-2.5 bg-transparent border border-neutral-700 hover:bg-neutral-800 rounded-lg text-sm font-bold text-white transition-colors">
-              Export progress
-            </button>
-            <button onclick="importProgressData()" class="px-4 py-2.5 bg-transparent border border-neutral-700 hover:bg-neutral-800 rounded-lg text-sm font-bold text-white transition-colors">
-              Import backup
-            </button>
-          </div>
-          <p class="text-[11px] text-neutral-500 mt-3">Your data stays in this browser unless you export it. No account, ads, or tracking.</p>
-        </div>
-
-        <hr class="border-neutral-800/50">
+        <hr class="border-[#1e2328]">
 
         <!-- Danger zone -->
         <div>
-          <h3 class="text-sm font-bold text-red-500 mb-4">Danger zone</h3>
-          <button onclick="eraseAllProgress()" class="px-4 py-2.5 bg-red-500 hover:bg-red-600 rounded-lg text-sm font-bold text-white transition-colors shadow-lg shadow-red-500/20">
-            Erase all progress
+          <h3 class="text-sm font-black uppercase tracking-wider text-[#e84057] mb-4">Critical Override</h3>
+          <button onclick="eraseAllProgress()" class="px-5 py-2.5 bg-[#e84057]/10 border border-[#e84057] hover:bg-[#e84057] text-xs font-black uppercase tracking-widest text-[#e84057] hover:text-white transition-all shadow-[0_0_10px_rgba(232,64,87,0.2)]">
+            Purge Database
           </button>
         </div>
 
       </div>
 
       <!-- Modal Footer -->
-      <div class="p-4 flex justify-end gap-3 border-t border-neutral-800/50 bg-[#15161b] rounded-b-2xl">
-        <button onclick="closeSettings()" class="px-5 py-2.5 bg-transparent border border-neutral-700 hover:bg-neutral-800 rounded-lg text-sm font-bold text-white transition-colors">
-          Cancel
+      <div class="p-4 flex justify-end gap-3 border-t border-[#1e2328] bg-[#091428]">
+        <button onclick="closeSettings()" class="px-6 py-2.5 bg-[#010a13] border border-[#1e2328] hover:border-[#a09b8c] text-[10px] font-black uppercase tracking-widest text-[#a09b8c] transition-colors">
+          Abort
         </button>
-        <button onclick="saveSettings()" class="px-5 py-2.5 bg-[#f97316] hover:bg-[#ea580c] rounded-lg text-sm font-bold text-white transition-colors shadow-lg shadow-orange-500/20">
-          Save changes
+        <button onclick="saveSettings()" class="px-6 py-2.5 bg-[#c89b3c]/10 border border-[#c89b3c] hover:bg-[#c89b3c] text-[10px] font-black uppercase tracking-widest text-[#c89b3c] hover:text-[#010a13] transition-all hex-glow-gold">
+          Confirm
         </button>
       </div>
 
@@ -619,7 +640,7 @@
 
     function applySettings() {
       const titleEl = document.getElementById('main-title');
-      titleEl.textContent = userSettings.name ? `${userSettings.name}'s 10-Week Strength & Mobility` : "10-Week Strength & Mobility";
+      titleEl.textContent = userSettings.name ? `${userSettings.name}'s 10-Week Protocol` : "10-Week Protocol";
 
       if (userSettings.reducedMotion) { document.documentElement.classList.add('reduced-motion'); } 
       else { document.documentElement.classList.remove('reduced-motion'); }
@@ -657,10 +678,10 @@
           renderCategories();
           renderApp();
         };
-        btn.className = `px-5 py-3 rounded-xl font-bold whitespace-nowrap transition-all ${
+        btn.className = `px-5 py-2 text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all ${
           activeCategory === cat 
-            ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
-            : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+            ? 'tab-active' 
+            : 'tab-inactive'
         }`;
         btn.textContent = cat;
         catContainer.appendChild(btn);
@@ -693,19 +714,21 @@
       const phaseObj = phases.find(p => p.id === phaseId);
       const phaseNameShort = phaseObj ? phaseObj.name.split(':')[0] : 'Phase';
       
-      document.getElementById('phase-progress-title').textContent = `${phaseNameShort} Completion`;
-      document.getElementById('phase-progress-text').textContent = `${completedPhaseSets} of ${totalPhaseSets} sets completed`;
+      document.getElementById('phase-progress-title').textContent = `${phaseNameShort} OVERVIEW`;
+      document.getElementById('phase-progress-text').textContent = `${completedPhaseSets} of ${totalPhaseSets} sets resolved`;
       document.getElementById('phase-progress-percent').textContent = `${percent}%`;
       
       const bar = document.getElementById('phase-progress-bar');
       bar.style.width = `${percent}%`;
       
       if (percent === 100 && totalPhaseSets > 0) {
-        bar.classList.replace('bg-indigo-500', 'bg-green-500');
-        document.getElementById('phase-progress-percent').classList.replace('text-indigo-400', 'text-green-400');
+        bar.classList.replace('bg-[#c89b3c]', 'bg-[#0ac8b9]');
+        bar.classList.replace('hex-glow-gold', 'hex-glow-cyan');
+        document.getElementById('phase-progress-percent').classList.replace('text-[#c89b3c]', 'text-[#0ac8b9]');
       } else {
-        bar.classList.replace('bg-green-500', 'bg-indigo-500');
-        document.getElementById('phase-progress-percent').classList.replace('text-green-400', 'text-indigo-400');
+        bar.classList.replace('bg-[#0ac8b9]', 'bg-[#c89b3c]');
+        bar.classList.replace('hex-glow-cyan', 'hex-glow-gold');
+        document.getElementById('phase-progress-percent').classList.replace('text-[#0ac8b9]', 'text-[#c89b3c]');
       }
     }
 
@@ -725,10 +748,10 @@
           stopTempo();
           renderApp();
         };
-        btn.className = `shrink-0 px-4 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-all snap-start ${
+        btn.className = `shrink-0 px-4 py-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all snap-start ${
           activeSubDay === day 
-            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20' 
-            : 'bg-neutral-800 border border-neutral-700 text-neutral-400 hover:bg-neutral-700'
+            ? 'bg-[#c89b3c]/10 text-[#c89b3c] border border-[#c89b3c] hex-glow-gold' 
+            : 'bg-[#010a13] border border-[#1e2328] text-[#a09b8c] hover:border-[#4a545c] hover:text-[#f0e6d2]'
         }`;
         btn.textContent = day;
         dayContainer.appendChild(btn);
@@ -749,12 +772,12 @@
         ['dynamic', 'static'].forEach(t => {
           const btn = document.createElement('button');
           btn.onclick = () => { activeFilter = t; renderApp(); };
-          btn.className = `flex-1 py-2 rounded-lg text-sm font-bold transition-all border ${
+          btn.className = `flex-1 py-2 text-[10px] uppercase tracking-widest font-black transition-all border ${
             activeFilter === t 
-              ? 'bg-indigo-600 border-indigo-500 text-white shadow-md' 
-              : 'bg-neutral-900 border-neutral-700 text-neutral-400 hover:bg-neutral-800'
+              ? 'bg-[#0ac8b9]/10 border-[#0ac8b9] text-[#0ac8b9] hex-glow-cyan' 
+              : 'bg-[#010a13] border-[#1e2328] text-[#a09b8c] hover:border-[#4a545c]'
           }`;
-          btn.innerHTML = t === 'dynamic' ? '🏋️ Dynamic Lifts' : '🧘‍♂️ Static Stretching';
+          btn.innerHTML = t === 'dynamic' ? 'DYNAMIC PROTOCOL' : 'STATIC RESTORATION';
           typeContainer.appendChild(btn);
         });
       }
@@ -765,7 +788,7 @@
 
       exercisesToRender.forEach((ex, exIdx) => {
         const div = document.createElement('div');
-        div.className = "bg-neutral-800 border border-neutral-700 rounded-2xl p-4 shadow-md hover:border-neutral-600 transition-colors";
+        div.className = "hex-panel p-5 relative transition-colors";
         
         let checksHtml = '';
         for (let i = 0; i < ex.sets; i++) {
@@ -773,28 +796,26 @@
           const isChecked = completedSets[key];
           
           checksHtml += `
-            <button onclick="handleCheck('${ex.name.replace(/'/g, "\\'")}', ${i})" class="w-12 h-12 md:w-10 md:h-10 rounded-xl flex items-center justify-center transition-all transform active:scale-90 ${
+            <button onclick="handleCheck('${ex.name.replace(/'/g, "\\'")}', ${i})" class="w-10 h-10 rounded-sm flex items-center justify-center transition-all transform active:scale-90 ${
               isChecked 
-                ? 'bg-green-500/20 text-green-500 border-2 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' 
-                : 'bg-neutral-900 border border-neutral-600 text-neutral-600 hover:border-neutral-400'
+                ? 'bg-[#0ac8b9]/20 border border-[#0ac8b9] text-[#0ac8b9] hex-glow-cyan' 
+                : 'bg-[#010a13] border border-[#1e2328] text-[#1e2328] hover:border-[#4a545c]'
             }">
-              ${isChecked 
-                ? `<svg class="w-6 h-6 md:w-5 md:h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><polyline points="9 11 12 14 22 4"/></svg>` 
-                : `<svg class="w-6 h-6 md:w-5 md:h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>`}
+              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
             </button>
           `;
         }
 
         const advancedHtml = ex.advanced 
-          ? `<div class="mt-3 bg-blue-900/10 border border-blue-900/30 rounded-lg p-3">
-               <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider block mb-1">Advanced Standard Goal</span>
-               <p class="text-sm text-neutral-300">${ex.advanced}</p>
+          ? `<div class="mt-4 border-l-2 border-[#c89b3c] pl-3 py-1">
+               <span class="text-[9px] text-[#c89b3c] font-black uppercase tracking-widest block mb-0.5">Elite Target</span>
+               <p class="text-xs text-[#f0e6d2] font-medium leading-relaxed">${ex.advanced}</p>
              </div>` : '';
              
         const regressionHtml = ex.regression 
-          ? `<div class="mt-2 bg-emerald-900/10 border border-emerald-900/30 rounded-lg p-3">
-               <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block mb-1">Regression (Easier Option)</span>
-               <p class="text-sm text-neutral-300">${ex.regression}</p>
+          ? `<div class="mt-3 border-l-2 border-[#a09b8c] pl-3 py-1">
+               <span class="text-[9px] text-[#a09b8c] font-black uppercase tracking-widest block mb-0.5">Regression Protocol</span>
+               <p class="text-xs text-[#a09b8c] font-medium leading-relaxed">${ex.regression}</p>
              </div>` : '';
 
         const searchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(ex.name + ' exercise proper form')}`;
@@ -808,59 +829,55 @@
         const currentRPE = rpeData[baseKey] || 5;
 
         div.innerHTML = `
-          <div class="flex flex-col md:flex-row justify-between gap-4">
+          <div class="flex flex-col md:flex-row justify-between gap-6">
             
             <div class="flex-1">
-              <div class="flex items-start justify-between mb-2 gap-2">
-                <h3 class="text-lg font-bold text-white leading-tight">${ex.name}</h3>
-                <a href="${searchUrl}" target="_blank" class="shrink-0 text-[11px] font-semibold text-center text-blue-400 hover:text-blue-300 hover:underline flex items-center justify-center gap-1 bg-blue-950/30 px-3 py-1.5 rounded-lg border border-blue-900/50 transition-colors">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> View Form
+              <div class="flex items-start justify-between mb-3 gap-2">
+                <h3 class="text-lg font-black uppercase tracking-wider text-[#f0e6d2] leading-tight">${ex.name}</h3>
+                <a href="${searchUrl}" target="_blank" class="shrink-0 text-[10px] font-black uppercase tracking-widest text-[#0ac8b9] hover:text-[#f0e6d2] flex items-center justify-center gap-1 border-b border-transparent hover:border-[#0ac8b9] transition-colors pb-0.5">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> Intel
                 </a>
               </div>
-              <div class="flex items-center gap-2 mb-3 flex-wrap">
-                <span class="inline-block px-2 py-1 bg-neutral-900 text-neutral-300 text-xs font-bold rounded border border-neutral-700">${ex.sets} Sets</span>
-                <span class="inline-block px-2 py-1 bg-neutral-900 text-blue-300 text-xs font-bold rounded border border-neutral-700">${ex.reps}</span>
+              <div class="flex items-center gap-2 mb-4 flex-wrap">
+                <span class="inline-block px-2 py-1 bg-[#010a13] border border-[#c89b3c]/50 text-[#c89b3c] text-[10px] font-black uppercase tracking-widest rounded-sm">${ex.sets} Sets</span>
+                <span class="inline-block px-2 py-1 bg-[#010a13] border border-[#c89b3c]/50 text-[#c89b3c] text-[10px] font-black uppercase tracking-widest rounded-sm">${ex.reps}</span>
                 
                 ${ex.rest ? `
-                <button onclick="startExerciseTimer(${ex.rest}, '${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1 px-2 py-1 bg-amber-900/30 hover:bg-amber-900/50 text-amber-400 border border-amber-900/50 text-xs font-bold rounded transition-colors shadow-sm" title="Start ${ex.rest}s Timer">
+                <button onclick="startExerciseTimer(${ex.rest}, '${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1.5 px-2 py-1 bg-[#c89b3c]/10 hover:bg-[#c89b3c]/20 text-[#c89b3c] border border-[#c89b3c] text-[10px] font-black uppercase tracking-widest rounded-sm transition-all hex-glow-gold" title="Start ${ex.rest}s Timer">
                   <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   Rest: ${ex.restStr || ex.rest + 's'}
                 </button>` : ''}
 
                 ${ex.holdTime ? `
-                <button onclick="startExerciseTimer(${ex.holdTime}, '${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-900/30 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-800/50 text-xs font-bold rounded transition-colors shadow-sm" title="Start ${ex.holdTime}s Hold Timer">
+                <button onclick="startExerciseTimer(${ex.holdTime}, '${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1.5 px-2 py-1 bg-[#a09b8c]/10 hover:bg-[#a09b8c]/20 text-[#f0e6d2] border border-[#a09b8c] text-[10px] font-black uppercase tracking-widest rounded-sm transition-all" title="Start ${ex.holdTime}s Hold Timer">
                   <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                   Hold: ${ex.holdTime}s
                 </button>` : ''}
 
                 ${ex.tempo ? `
-                <button id="tempo-btn-${safeId}" data-orig-text="Tempo: ${ex.tempo.join('-')}" onclick="startTempoFromButton('${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1 px-2 py-1 bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 border border-indigo-800/50 text-xs font-bold rounded transition-colors shadow-sm">
+                <button id="tempo-btn-${safeId}" data-orig-text="Tempo: ${ex.tempo.join('-')}" onclick="startTempoFromButton('${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1.5 px-2 py-1 bg-[#0ac8b9]/10 hover:bg-[#0ac8b9]/20 text-[#0ac8b9] border border-[#0ac8b9] text-[10px] font-black uppercase tracking-widest rounded-sm transition-all hex-glow-cyan">
                   <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                   Tempo: ${ex.tempo.join('-')}
                 </button>` : ''}
               </div>
-              <p class="text-sm text-neutral-400 leading-relaxed border-l-2 border-neutral-600 pl-3 mb-2"><strong class="text-neutral-300 font-semibold">Key Note:</strong> ${ex.notes}</p>
+              <p class="text-xs text-[#a09b8c] font-medium leading-relaxed mb-2"><strong class="text-[#f0e6d2] font-black uppercase tracking-wide">Directive:</strong> ${ex.notes}</p>
               ${advancedHtml}
               ${regressionHtml}
 
               <!-- RPE Slider -->
-              <div class="mt-4 pt-4 border-t border-neutral-700/50">
-                <div class="flex justify-between items-center mb-2">
-                  <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Rate Perceived Exertion (RPE)</label>
-                  <span class="text-xs font-bold text-orange-400 px-2 py-0.5 rounded bg-neutral-900 border border-neutral-700" id="rpe-val-${safeId}">${currentRPE}/10</span>
+              <div class="mt-5 pt-3 border-t border-[#1e2328]">
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-[9px] font-black text-[#4a545c] uppercase tracking-[0.2em]">Exertion Output (RPE)</label>
+                  <span class="text-[10px] font-black text-[#0ac8b9] uppercase tracking-widest" id="rpe-val-${safeId}">LVL ${currentRPE}</span>
                 </div>
-                <input type="range" min="1" max="10" value="${currentRPE}" onchange="handleRPE('${ex.name.replace(/'/g, "\\'")}', this.value)" oninput="document.getElementById('rpe-val-${safeId}').textContent = this.value + '/10'" class="rpe-slider w-full h-1.5 bg-neutral-700 rounded-lg appearance-none cursor-pointer">
-                <div class="flex justify-between text-[9px] text-neutral-500 mt-1 font-semibold uppercase px-1">
-                  <span>Very Easy</span>
-                  <span>Max Effort</span>
-                </div>
+                <input type="range" min="1" max="10" value="${currentRPE}" onchange="handleRPE('${ex.name.replace(/'/g, "\\'")}', this.value)" oninput="document.getElementById('rpe-val-${safeId}').textContent = 'LVL ' + this.value" class="rpe-slider w-full h-1 bg-[#010a13] border border-[#1e2328] rounded-none appearance-none cursor-pointer">
               </div>
 
             </div>
 
-            <div class="flex flex-row md:flex-col gap-2 items-center justify-center md:justify-start md:w-auto w-full border-t md:border-t-0 md:border-l border-neutral-700 pt-4 md:pt-0 md:pl-4">
-              <span class="text-xs text-neutral-500 font-bold uppercase tracking-wider mb-1 hidden md:block">Track</span>
-              <div class="flex gap-3">${checksHtml}</div>
+            <div class="flex flex-row md:flex-col gap-2 items-center justify-center md:justify-start md:w-auto w-full border-t md:border-t-0 md:border-l border-[#1e2328] pt-4 md:pt-0 md:pl-5">
+              <span class="text-[9px] text-[#4a545c] font-black uppercase tracking-[0.2em] mb-1 hidden md:block">Logs</span>
+              <div class="flex gap-2">${checksHtml}</div>
             </div>
           </div>
         `;
@@ -938,12 +955,12 @@
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "strength_mobility_progress.json");
+        downloadAnchor.setAttribute("download", "hextech_protocol_data.json");
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
       } catch (err) {
-        alert("Could not export data.");
+        alert("System Error: Could not export data.");
       }
     }
 
@@ -967,12 +984,12 @@
               localStorage.setItem('10WeekTrackerData', JSON.stringify(completedSets));
               localStorage.setItem('10WeekRPEData', JSON.stringify(rpeData));
               renderApp();
-              alert("Progress successfully restored!");
+              alert("Telemetry successfully restored.");
             } else {
-              alert("Invalid file structure detected.");
+              alert("System Error: Invalid file structure detected.");
             }
           } catch (err) {
-            alert("Error reading file.");
+            alert("System Error: Read failure.");
           }
         }
         reader.readAsText(file);
@@ -999,10 +1016,10 @@
       order.forEach(muscle => {
         const sets = volumeData[muscle];
         const div = document.createElement('div');
-        div.className = "bg-neutral-900 border border-neutral-700 rounded-lg p-2.5 flex items-center justify-between transition-colors shadow-inner";
-        if (sets > 0) div.classList.add('border-indigo-500/50', 'bg-indigo-900/20');
-        div.innerHTML = `<span class="text-[10px] md:text-xs text-neutral-400 font-bold uppercase tracking-wider">${muscle}</span>
-                         <span class="text-xl md:text-2xl font-black ${sets > 0 ? 'text-indigo-400' : 'text-neutral-600'}">${sets}</span>`;
+        div.className = "bg-[#010a13] border border-[#1e2328] rounded-sm p-3 flex items-center justify-between transition-colors";
+        if (sets > 0) div.classList.add('border-[#0ac8b9]', 'bg-[#0ac8b9]/10');
+        div.innerHTML = `<span class="text-[9px] text-[#a09b8c] font-black uppercase tracking-[0.1em]">${muscle}</span>
+                         <span class="text-xl font-black ${sets > 0 ? 'text-[#0ac8b9] hex-text-glow' : 'text-[#4a545c]'}">${sets}</span>`;
         container.appendChild(div);
       });
     }
@@ -1018,24 +1035,22 @@
       });
 
       const progressPercent = totalSets === 0 ? 0 : Math.round((completedSetsCount / totalSets) * 100);
-      document.getElementById('progress-text').textContent = `${completedSetsCount} of ${totalSets} sets completed`;
+      document.getElementById('progress-text').textContent = `${completedSetsCount} of ${totalSets} sets resolved`;
       
       const bar = document.getElementById('progress-bar');
       bar.style.width = `${progressPercent}%`;
       
       if (progressPercent === 100 && totalSets > 0) {
-        bar.classList.replace('bg-blue-500', 'bg-green-500');
         document.getElementById('done-badge').classList.remove('hidden');
         document.getElementById('done-badge').classList.add('flex');
       } else {
-        bar.classList.replace('bg-green-500', 'bg-blue-500');
         document.getElementById('done-badge').classList.add('hidden');
         document.getElementById('done-badge').classList.remove('flex');
       }
     }
 
     function resetCurrentDay() {
-      if(confirm("Reset checkboxes for this day?")) {
+      if(confirm("Confirm hard reset for this routine?")) {
         const dataNode = activeCategory === "Main Plan" ? workoutData["Main Plan"][activePhaseId] : workoutData[activeCategory];
         const exercises = dataNode[activeSubDay] || [];
         exercises.forEach(ex => { 
@@ -1084,10 +1099,10 @@
       
       const btn = document.getElementById(btnId);
       if(btn) {
-        btn.classList.replace('bg-indigo-900/40', 'bg-indigo-600');
-        btn.classList.replace('text-indigo-300', 'text-white');
+        btn.classList.replace('bg-[#0ac8b9]/10', 'bg-[#0ac8b9]');
+        btn.classList.replace('text-[#0ac8b9]', 'text-[#010a13]');
         btn.classList.add('animate-pulse');
-        btn.innerHTML = `<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Stop Tempo Voice`;
+        btn.innerHTML = `<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> ABORT TEMPO`;
       }
 
       let currentSetNum = ex.sets; 
@@ -1162,8 +1177,8 @@
       if(activeTempoButtonId) {
         const btn = document.getElementById(activeTempoButtonId);
         if(btn) {
-          btn.classList.replace('bg-indigo-600', 'bg-indigo-900/40');
-          btn.classList.replace('text-white', 'text-indigo-300');
+          btn.classList.replace('bg-[#0ac8b9]', 'bg-[#0ac8b9]/10');
+          btn.classList.replace('text-[#010a13]', 'text-[#0ac8b9]');
           btn.classList.remove('animate-pulse');
           const origText = btn.getAttribute('data-orig-text');
           btn.innerHTML = `<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> ` + origText;
@@ -1197,16 +1212,16 @@
     function updateTimerUI() {
       document.getElementById('timer-display').textContent = formatTime(timeLeft);
       const icon = document.getElementById('timer-icon');
-      if (timeLeft > 0) { icon.classList.add('text-amber-400', 'animate-pulse'); icon.classList.remove('text-neutral-400'); } 
-      else { icon.classList.remove('text-amber-400', 'animate-pulse'); icon.classList.add('text-neutral-400'); }
+      if (timeLeft > 0) { icon.classList.add('text-[#c89b3c]', 'animate-pulse'); icon.classList.remove('text-[#4a545c]'); } 
+      else { icon.classList.remove('text-[#c89b3c]', 'animate-pulse'); icon.classList.add('text-[#4a545c]'); }
 
       const btn = document.getElementById('toggle-timer-btn');
       const playIcon = document.getElementById('play-icon'); const pauseIcon = document.getElementById('pause-icon');
       if (timerActive) {
-        btn.classList.replace('bg-green-500/20', 'bg-amber-500/20'); btn.classList.replace('text-green-400', 'text-amber-400'); btn.classList.replace('hover:bg-green-500/30', 'hover:bg-amber-500/30');
+        btn.classList.replace('bg-[#0ac8b9]/10', 'bg-[#c89b3c]/10'); btn.classList.replace('text-[#0ac8b9]', 'text-[#c89b3c]'); btn.classList.replace('border-[#0ac8b9]', 'border-[#c89b3c]'); btn.classList.replace('hex-glow-cyan', 'hex-glow-gold');
         playIcon.classList.add('hidden'); pauseIcon.classList.remove('hidden');
       } else {
-        btn.classList.replace('bg-amber-500/20', 'bg-green-500/20'); btn.classList.replace('text-amber-400', 'text-green-400'); btn.classList.replace('hover:bg-amber-500/30', 'hover:bg-green-500/30');
+        btn.classList.replace('bg-[#c89b3c]/10', 'bg-[#0ac8b9]/10'); btn.classList.replace('text-[#c89b3c]', 'text-[#0ac8b9]'); btn.classList.replace('border-[#c89b3c]', 'border-[#0ac8b9]'); btn.classList.replace('hex-glow-gold', 'hex-glow-cyan');
         pauseIcon.classList.add('hidden'); playIcon.classList.remove('hidden');
       }
     }
