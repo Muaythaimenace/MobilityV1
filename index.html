@@ -10,21 +10,37 @@
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     body { font-family: system-ui, -apple-system, sans-serif; }
+    
+    /* Reduced motion override class */
+    .reduced-motion * {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
   </style>
 </head>
 <body class="bg-neutral-900 text-neutral-100 min-h-screen pb-24">
   <div class="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
     
+    <!-- Header Section -->
     <div class="bg-neutral-800 border border-neutral-700 rounded-2xl p-6 shadow-xl">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h1 class="text-2xl font-bold text-white tracking-tight">10-Week Strength & Mobility</h1>
+          <div class="flex items-center gap-3">
+            <h1 id="main-title" class="text-2xl font-bold text-white tracking-tight">10-Week Strength & Mobility</h1>
+          </div>
           <p class="text-neutral-400 text-sm mt-1">Rebuild glutes, back, and hips for full splits.</p>
         </div>
-        <div class="w-full md:w-64">
-          <label class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mb-1 block">Current Phase</label>
-          <select id="phase-selector" class="w-full bg-neutral-900 border border-neutral-700 text-white rounded-lg p-2.5 outline-none focus:border-blue-500 transition-colors cursor-pointer">
-            </select>
+        <div class="flex items-end gap-3 w-full md:w-auto">
+          <div class="w-full md:w-56">
+            <label class="text-xs text-neutral-400 font-semibold uppercase tracking-wider mb-1 block">Current Phase</label>
+            <select id="phase-selector" class="w-full bg-neutral-900 border border-neutral-700 text-white rounded-lg p-2.5 outline-none focus:border-blue-500 transition-colors cursor-pointer">
+              </select>
+          </div>
+          <!-- Settings / Account Button -->
+          <button onclick="openSettings()" class="shrink-0 p-2.5 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-neutral-300 transition-colors h-11 w-11 flex items-center justify-center border border-neutral-600" title="Settings & Data">
+            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </button>
         </div>
       </div>
       <div class="bg-blue-900/20 border border-blue-800/50 rounded-xl p-4 flex gap-3 items-start">
@@ -85,22 +101,133 @@
 
     <div id="exercise-list" class="space-y-4"></div>
     
-    <div id="reset-day-container" class="pt-6 flex flex-col items-center gap-4">
+    <div id="reset-day-container" class="pt-6 flex justify-center hidden">
       <button onclick="resetCurrentDay()" class="text-neutral-500 hover:text-red-400 text-sm font-semibold flex items-center gap-2 transition-colors">
         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset checkboxes for this day
       </button>
-
-      <!-- Progress Backup / Restore Controls -->
-      <div class="flex gap-3 border-t border-neutral-800 pt-4 w-full justify-center">
-        <button onclick="exportProgressData()" class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-xs font-bold text-neutral-400 flex items-center gap-1.5 transition-colors">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Progress
-        </button>
-        <button onclick="importProgressData()" class="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 rounded-xl text-xs font-bold text-neutral-400 flex items-center gap-1.5 transition-colors">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import Backup
-        </button>
-      </div>
     </div>
 
+  </div>
+
+  <!-- Account / Settings Modal -->
+  <div id="settings-modal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] hidden backdrop-blur-sm p-4">
+    <div class="bg-[#1a1c23] w-full max-w-2xl rounded-2xl shadow-2xl border border-neutral-700/50 flex flex-col max-h-[90vh]">
+      
+      <!-- Modal Header -->
+      <div class="flex justify-between items-start p-6 pb-2 border-b border-neutral-800/50">
+        <div>
+          <span class="text-[#f97316] text-[10px] font-black uppercase tracking-[0.2em]">Make it yours</span>
+          <h2 class="text-2xl font-bold text-white mt-1">Settings & data</h2>
+        </div>
+        <button onclick="closeSettings()" class="text-neutral-400 hover:text-white bg-neutral-800 hover:bg-neutral-700 p-1.5 rounded-full transition-colors border border-neutral-700">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-8 overflow-y-auto hide-scrollbar">
+        
+        <!-- Profile -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-xs font-bold text-neutral-300 mb-2">Name</label>
+            <input type="text" id="setting-name" class="w-full bg-[#111216] border border-neutral-700 text-white rounded-lg p-2.5 outline-none focus:border-orange-500 transition-colors placeholder-neutral-600" placeholder="e.g. Sal">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-neutral-300 mb-2">Program start</label>
+            <input type="date" id="setting-date" class="w-full bg-[#111216] border border-neutral-700 text-white rounded-lg p-2.5 outline-none focus:border-orange-500 transition-colors [color-scheme:dark]">
+          </div>
+        </div>
+
+        <hr class="border-neutral-800/50">
+
+        <!-- Experience -->
+        <div>
+          <h3 class="text-sm font-bold text-white mb-4">Experience</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label class="block text-xs font-bold text-neutral-300 mb-2">Theme</label>
+              <select id="setting-theme" class="w-full bg-[#111216] border border-neutral-700 text-white rounded-lg p-2.5 outline-none focus:border-orange-500 transition-colors cursor-pointer">
+                <option value="dark">Dark</option>
+                <option value="light">Light (Coming Soon)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-neutral-300 mb-2">Default timer</label>
+              <select id="setting-timer" class="w-full bg-[#111216] border border-neutral-700 text-white rounded-lg p-2.5 outline-none focus:border-orange-500 transition-colors cursor-pointer">
+                <option value="60">60 seconds</option>
+                <option value="90">90 seconds</option>
+                <option value="120">2 minutes</option>
+                <option value="180">3 minutes</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="space-y-5">
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="text-sm font-bold text-white">Timer sound</h4>
+                <p class="text-xs text-neutral-400 mt-0.5">Play a chime when time expires</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="setting-sound" class="sr-only peer">
+                <div class="w-11 h-6 bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-300 peer-checked:after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#f97316]"></div>
+              </label>
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="text-sm font-bold text-white">Reduced motion</h4>
+                <p class="text-xs text-neutral-400 mt-0.5">Limit nonessential animation</p>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="setting-motion" class="sr-only peer">
+                <div class="w-11 h-6 bg-neutral-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-300 peer-checked:after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#f97316]"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-neutral-800/50">
+
+        <!-- Backup & restore -->
+        <div>
+          <h3 class="text-sm font-bold text-white mb-4">Backup & restore</h3>
+          <div class="flex gap-3">
+            <button onclick="exportProgressData()" class="px-4 py-2.5 bg-transparent border border-neutral-700 hover:bg-neutral-800 rounded-lg text-sm font-bold text-white transition-colors">
+              Export progress
+            </button>
+            <button onclick="importProgressData()" class="px-4 py-2.5 bg-transparent border border-neutral-700 hover:bg-neutral-800 rounded-lg text-sm font-bold text-white transition-colors">
+              Import backup
+            </button>
+          </div>
+          <p class="text-[11px] text-neutral-500 mt-3">Your data stays in this browser unless you export it. No account, ads, or tracking.</p>
+        </div>
+
+        <hr class="border-neutral-800/50">
+
+        <!-- Danger zone -->
+        <div>
+          <h3 class="text-sm font-bold text-red-500 mb-4">Danger zone</h3>
+          <button onclick="eraseAllProgress()" class="px-4 py-2.5 bg-red-500 hover:bg-red-600 rounded-lg text-sm font-bold text-white transition-colors shadow-lg shadow-red-500/20">
+            Erase all progress
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 flex justify-end gap-3 border-t border-neutral-800/50 bg-[#15161b] rounded-b-2xl">
+        <button onclick="closeSettings()" class="px-5 py-2.5 bg-transparent border border-neutral-700 hover:bg-neutral-800 rounded-lg text-sm font-bold text-white transition-colors">
+          Cancel
+        </button>
+        <button onclick="saveSettings()" class="px-5 py-2.5 bg-[#f97316] hover:bg-[#ea580c] rounded-lg text-sm font-bold text-white transition-colors shadow-lg shadow-orange-500/20">
+          Save changes
+        </button>
+      </div>
+
+    </div>
   </div>
 
   <script>
@@ -343,11 +470,17 @@
     let activeSubDay = "Day 1: Hips & Glutes";
     let activeFilter = "dynamic"; 
     
+    // Default User Settings
+    let userSettings = {
+      name: '',
+      startDate: '',
+      theme: 'dark',
+      defaultTimer: 60,
+      timerSound: true,
+      reducedMotion: false
+    };
+    
     let completedSets = {};
-    try {
-      const saved = localStorage.getItem('10WeekTrackerData');
-      if (saved) completedSets = JSON.parse(saved);
-    } catch (e) { }
 
     let timeLeft = 0;
     let timerActive = false;
@@ -369,6 +502,17 @@
     }
 
     function init() {
+      // Load Data
+      try {
+        const savedSets = localStorage.getItem('10WeekTrackerData');
+        if (savedSets) completedSets = JSON.parse(savedSets);
+        
+        const savedSettings = localStorage.getItem('10WeekSettings');
+        if (savedSettings) userSettings = { ...userSettings, ...JSON.parse(savedSettings) };
+      } catch (e) { }
+
+      applySettings();
+
       const phaseSelector = document.getElementById('phase-selector');
       phases.forEach(p => {
         const option = document.createElement('option');
@@ -388,6 +532,60 @@
       renderCategories();
       renderApp();
     }
+
+    // --- Settings Modal Logic ---
+    function openSettings() {
+      document.getElementById('settings-modal').classList.remove('hidden');
+      document.getElementById('setting-name').value = userSettings.name;
+      document.getElementById('setting-date').value = userSettings.startDate;
+      document.getElementById('setting-theme').value = userSettings.theme;
+      document.getElementById('setting-timer').value = userSettings.defaultTimer;
+      document.getElementById('setting-sound').checked = userSettings.timerSound;
+      document.getElementById('setting-motion').checked = userSettings.reducedMotion;
+    }
+
+    function closeSettings() {
+      document.getElementById('settings-modal').classList.add('hidden');
+    }
+
+    function saveSettings() {
+      userSettings.name = document.getElementById('setting-name').value;
+      userSettings.startDate = document.getElementById('setting-date').value;
+      userSettings.theme = document.getElementById('setting-theme').value;
+      userSettings.defaultTimer = document.getElementById('setting-timer').value;
+      userSettings.timerSound = document.getElementById('setting-sound').checked;
+      userSettings.reducedMotion = document.getElementById('setting-motion').checked;
+
+      try {
+        localStorage.setItem('10WeekSettings', JSON.stringify(userSettings));
+      } catch(e) {}
+
+      applySettings();
+      closeSettings();
+    }
+
+    function applySettings() {
+      // 1. Title Name
+      const titleEl = document.getElementById('main-title');
+      titleEl.textContent = userSettings.name ? `${userSettings.name}'s 10-Week Strength & Mobility` : "10-Week Strength & Mobility";
+
+      // 2. Reduced Motion
+      if (userSettings.reducedMotion) {
+        document.documentElement.classList.add('reduced-motion');
+      } else {
+        document.documentElement.classList.remove('reduced-motion');
+      }
+    }
+
+    function eraseAllProgress() {
+      if(confirm("Are you absolutely sure you want to erase ALL progress? This cannot be undone unless you have a backup.")) {
+        completedSets = {};
+        localStorage.removeItem('10WeekTrackerData');
+        renderApp();
+        closeSettings();
+      }
+    }
+    // -----------------------------
 
     function renderCategories() {
       const catContainer = document.getElementById('category-tabs');
@@ -695,8 +893,6 @@
         document.getElementById('done-badge').classList.add('hidden');
         document.getElementById('done-badge').classList.remove('flex');
       }
-      const resetBtn = document.getElementById('reset-day-container');
-      if (completedSetsCount > 0) resetBtn.classList.remove('hidden'); else resetBtn.classList.add('hidden');
     }
 
     function resetCurrentDay() {
@@ -747,8 +943,7 @@
         btn.innerHTML = `<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Stop Tempo Voice`;
       }
 
-      // Determine which set we are about to start based on checked boxes
-      let currentSetNum = ex.sets; // default to max if all done
+      let currentSetNum = ex.sets; 
       for (let i = 0; i < ex.sets; i++) {
         if (!completedSets[getTrackKey(ex.name, i)]) {
           currentSetNum = i + 1;
@@ -758,7 +953,6 @@
 
       speechSequence = [];
       
-      // Inject Set Announcer
       if (withCountdown) {
           speechSequence.push(`Set ${currentSetNum} starting in 3`);
           speechSequence.push("2");
@@ -832,6 +1026,7 @@
     }
 
     function playBeep() {
+      if (!userSettings.timerSound) return;
       try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const ctx = new AudioContext();
@@ -903,7 +1098,10 @@
     function resetTimer() { 
       timerActive = false; 
       clearInterval(timerInterval); 
-      timeLeft = 0; 
+      
+      // If no custom time left, check settings for default timer value
+      timeLeft = userSettings.defaultTimer ? parseInt(userSettings.defaultTimer) : 0; 
+      
       currentAutoExercise = null; 
       updateTimerUI(); 
     }
