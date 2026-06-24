@@ -6,14 +6,13 @@
   <title>Strength & Mobility | Hextech Interface</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Hextech Font Imports (System fonts adjusted for sharp UI) */
+    /* Hextech Font & Base Imports */
     body { 
       font-family: system-ui, -apple-system, sans-serif; 
-      background-color: #010a13; /* Deep Abyssal Blue */
-      color: #f0e6d2; /* Parchment/Gold-white text */
+      background-color: #010a13; 
+      color: #f0e6d2; 
     }
     
-    /* Scrollbars - Hextech Style */
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
@@ -23,54 +22,50 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #c89b3c; border-radius: 0px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #f0e6d2; }
 
-    /* Reduced motion override class */
     .reduced-motion * {
       animation-duration: 0.001ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.001ms !important;
     }
 
-    /* RPE slider Hextech Accent */
-    input[type=range].rpe-slider {
-      accent-color: #0ac8b9;
-      background: #1e2328;
-    }
+    input[type=range].rpe-slider { accent-color: #0ac8b9; background: #1e2328; }
 
-    /* Sharp Custom Styles */
     .hex-panel {
       background: #091428;
       border: 1px solid #1e2328;
-      border-top: 2px solid #c89b3c; /* Gold Top Accent */
+      border-top: 2px solid #c89b3c; 
       border-radius: 2px;
     }
 
-    .hex-glow-cyan {
-      box-shadow: 0 0 10px rgba(10, 200, 185, 0.4);
+    .hex-glow-cyan { box-shadow: 0 0 10px rgba(10, 200, 185, 0.4); }
+    .hex-glow-gold { box-shadow: 0 0 10px rgba(200, 155, 60, 0.4); }
+    .hex-glow-green { box-shadow: 0 0 15px rgba(34, 197, 94, 0.6); border-color: #22c55e !important; color: #22c55e !important; }
+    .hex-text-glow { text-shadow: 0 0 8px rgba(10, 200, 185, 0.6); }
+    
+    .tab-active { border-bottom: 2px solid #c89b3c; color: #c89b3c; background: linear-gradient(to top, rgba(200,155,60,0.1) 0%, transparent 100%); }
+    .tab-inactive { border-bottom: 2px solid transparent; color: #a09b8c; }
+    .tab-inactive:hover { color: #f0e6d2; border-bottom: 2px solid #4a545c; }
+
+    .hex-node {
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.5s ease;
     }
     
-    .hex-glow-gold {
-      box-shadow: 0 0 10px rgba(200, 155, 60, 0.4);
+    .tree-line {
+      width: 2px;
+      height: 30px;
+      margin: 0 auto;
+      transition: background-color 0.5s ease;
     }
 
-    .hex-text-glow {
-      text-shadow: 0 0 8px rgba(10, 200, 185, 0.6);
+    @keyframes pulse-fast {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
     }
-    
-    .tab-active {
-      border-bottom: 2px solid #c89b3c;
-      color: #c89b3c;
-      background: linear-gradient(to top, rgba(200,155,60,0.1) 0%, transparent 100%);
-    }
-
-    .tab-inactive {
-      border-bottom: 2px solid transparent;
-      color: #a09b8c;
-    }
-    
-    .tab-inactive:hover {
-      color: #f0e6d2;
-      border-bottom: 2px solid #4a545c;
-    }
+    .animate-pulse-fast { animation: pulse-fast 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
   </style>
 </head>
 <body class="min-h-screen pb-24 tracking-wide antialiased">
@@ -78,15 +73,18 @@
     
     <!-- Top HUD Banner -->
     <div class="hex-panel p-5 shadow-2xl relative overflow-hidden">
-      <!-- Background subtle accent -->
       <div class="absolute top-0 right-0 w-64 h-64 bg-[#0ac8b9] opacity-[0.03] rounded-full blur-3xl pointer-events-none"></div>
       
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-5 relative z-10">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 relative z-10">
         <div>
-          <div class="flex items-center gap-3">
-            <h1 id="main-title" class="text-2xl font-black uppercase tracking-widest text-[#f0e6d2]">10-Week Protocol</h1>
-          </div>
-          <p class="text-[#a09b8c] text-xs uppercase tracking-wider mt-1 font-semibold">Rebuild glutes, back, and hips for full splits.</p>
+          <h1 id="main-title" class="text-2xl font-black uppercase tracking-widest text-[#f0e6d2]">10-Week Protocol</h1>
+          <p id="contract-hud" class="text-[#0ac8b9] text-[10px] uppercase tracking-widest mt-1.5 font-bold flex items-center gap-1.5 hex-text-glow">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            CONTRACT: UNASSIGNED
+          </p>
+          <p id="equipment-hud" class="text-[#a09b8c] text-[9px] uppercase tracking-widest mt-1 font-bold">
+            LOADOUT: STANDARD
+          </p>
         </div>
         <div class="flex items-end gap-3 w-full md:w-auto">
           <div class="w-full md:w-56">
@@ -94,17 +92,12 @@
             <select id="phase-selector" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] rounded-none p-2 outline-none focus:border-[#0ac8b9] transition-colors cursor-pointer text-sm font-semibold tracking-wide appearance-none uppercase">
               </select>
           </div>
-          <!-- Settings / Account Button -->
           <button onclick="openSettings()" class="shrink-0 p-2 bg-[#010a13] hover:bg-[#1e2328] border border-[#1e2328] hover:border-[#c89b3c] text-[#a09b8c] hover:text-[#c89b3c] transition-all h-10 w-10 flex items-center justify-center hex-glow-gold" title="Settings & Data">
             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </button>
         </div>
       </div>
       
-      <div class="bg-[#010a13] border-l-2 border-[#0ac8b9] p-3 flex gap-3 items-start relative z-10">
-        <p id="phase-description" class="text-xs text-[#a09b8c] leading-relaxed font-medium uppercase tracking-wide"></p>
-      </div>
-
       <!-- Master Phase Progress Tracker -->
       <div class="mt-5 pt-4 border-t border-[#1e2328] relative z-10">
         <div class="flex justify-between items-end mb-2">
@@ -123,84 +116,198 @@
       </div>
     </div>
 
-    <!-- Master Timer Console -->
-    <div class="sticky top-4 z-50 hex-panel p-3 shadow-2xl flex flex-wrap md:flex-nowrap items-center justify-between gap-4 border-l-4 border-l-[#0ac8b9]">
-      <div class="flex items-center gap-3 pl-2">
-        <svg id="timer-icon" class="w-5 h-5 text-[#4a545c]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span id="timer-display" class="text-3xl font-black tracking-widest w-24 text-[#f0e6d2]">0:00</span>
-      </div>
-      <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
-        <button onclick="startTimer(60)" class="px-4 py-1.5 bg-[#010a13] border border-[#1e2328] hover:border-[#0ac8b9] text-[#a09b8c] hover:text-[#0ac8b9] text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all">60s</button>
-        <button onclick="startTimer(90)" class="px-4 py-1.5 bg-[#010a13] border border-[#1e2328] hover:border-[#0ac8b9] text-[#a09b8c] hover:text-[#0ac8b9] text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all">90s</button>
-        <button onclick="startTimer(180)" class="px-4 py-1.5 bg-[#010a13] border border-[#1e2328] hover:border-[#0ac8b9] text-[#a09b8c] hover:text-[#0ac8b9] text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all">3m</button>
-        <div class="w-px h-6 bg-[#1e2328] mx-2 self-center"></div>
-        <button id="toggle-timer-btn" onclick="toggleTimer()" class="px-3 py-1.5 transition-all bg-[#0ac8b9]/10 border border-[#0ac8b9] text-[#0ac8b9] hover:bg-[#0ac8b9]/20 hex-glow-cyan uppercase text-xs font-black tracking-wider flex items-center gap-1.5">
-          <svg id="play-icon" class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          <svg id="pause-icon" class="w-3.5 h-3.5 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-        </button>
-        <button onclick="resetTimer()" class="p-1.5 bg-[#010a13] border border-[#1e2328] hover:border-[#e84057] text-[#4a545c] hover:text-[#e84057] transition-all">
-          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-        </button>
-      </div>
+    <!-- Master View Navigation -->
+    <div class="flex gap-1 bg-[#010a13] border border-[#1e2328] p-1 sticky top-4 z-[60] shadow-2xl">
+      <button onclick="switchMasterView('protocol')" id="tab-protocol" class="flex-1 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all bg-[#0ac8b9]/10 text-[#0ac8b9] border border-[#0ac8b9] hex-glow-cyan">PROTOCOL</button>
+      <button onclick="switchMasterView('skilltree')" id="tab-skilltree" class="flex-1 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all text-[#a09b8c] hover:text-[#f0e6d2] hover:bg-[#1e2328]">SKILL TREE</button>
+      <button onclick="switchMasterView('ghost')" id="tab-ghost" class="flex-1 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all text-[#a09b8c] hover:text-[#f0e6d2] hover:bg-[#1e2328]">GHOST MODE</button>
     </div>
 
-    <!-- Navigation Hub -->
-    <div class="mt-8">
-      <!-- Category Tabs -->
-      <div id="category-tabs" class="flex overflow-x-auto gap-1 custom-scrollbar pb-1"></div>
+    <!-- ========================================== -->
+    <!-- VIEW 1: PROTOCOL                           -->
+    <!-- ========================================== -->
+    <div id="view-protocol" class="block space-y-6">
       
-      <!-- Day Tabs -->
-      <div class="bg-[#091428] border border-[#1e2328] mt-2 p-1">
-        <div id="day-tabs" class="flex overflow-x-auto gap-1 custom-scrollbar pb-2 snap-x scroll-smooth"></div>
-      </div>
-    </div>
-
-    <!-- Active Routine Status -->
-    <div class="hex-panel p-5 shadow-lg mt-6">
-      <div class="flex justify-between items-end mb-4 border-b border-[#1e2328] pb-4">
-        <div>
-          <h2 id="current-day-title" class="text-xl font-black uppercase text-[#f0e6d2] tracking-wider"></h2>
-          <p id="progress-text" class="text-[#c89b3c] text-[10px] font-bold mt-1 uppercase tracking-widest">0 of 0 sets completed</p>
+      <!-- Timer Console -->
+      <div class="hex-panel p-3 shadow-2xl flex flex-wrap md:flex-nowrap items-center justify-between gap-4 border-l-4 border-l-[#0ac8b9]">
+        <div class="flex items-center gap-3 pl-2">
+          <svg id="timer-icon" class="w-5 h-5 text-[#4a545c]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span id="timer-display" class="text-3xl font-black tracking-widest w-24 text-[#f0e6d2]">0:00</span>
         </div>
-        <span id="done-badge" class="hidden items-center gap-1.5 text-[#0ac8b9] text-xs font-black uppercase tracking-widest animate-pulse hex-text-glow">
-          <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> SECURED
-        </span>
+        <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
+          <button onclick="startTimer(60)" class="px-4 py-1.5 bg-[#010a13] border border-[#1e2328] hover:border-[#0ac8b9] text-[#a09b8c] hover:text-[#0ac8b9] text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all">60s</button>
+          <button onclick="startTimer(90)" class="px-4 py-1.5 bg-[#010a13] border border-[#1e2328] hover:border-[#0ac8b9] text-[#a09b8c] hover:text-[#0ac8b9] text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all">90s</button>
+          <button onclick="startTimer(180)" class="px-4 py-1.5 bg-[#010a13] border border-[#1e2328] hover:border-[#0ac8b9] text-[#a09b8c] hover:text-[#0ac8b9] text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all">3m</button>
+          <div class="w-px h-6 bg-[#1e2328] mx-2 self-center"></div>
+          <button id="toggle-timer-btn" onclick="toggleTimer()" class="px-3 py-1.5 transition-all bg-[#0ac8b9]/10 border border-[#0ac8b9] text-[#0ac8b9] hover:bg-[#0ac8b9]/20 hex-glow-cyan uppercase text-xs font-black tracking-wider flex items-center gap-1.5">
+            <svg id="play-icon" class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <svg id="pause-icon" class="w-3.5 h-3.5 hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          </button>
+          <button onclick="resetTimer()" class="p-1.5 bg-[#010a13] border border-[#1e2328] hover:border-[#e84057] text-[#4a545c] hover:text-[#e84057] transition-all">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+        </div>
       </div>
-      
-      <div class="h-1 bg-[#010a13] border border-[#1e2328] w-full">
-        <div id="progress-bar" class="h-full bg-[#0ac8b9] transition-all duration-500 ease-out hex-glow-cyan" style="width: 0%"></div>
+
+      <!-- Navigation Hub -->
+      <div>
+        <div id="category-tabs" class="flex overflow-x-auto gap-1 custom-scrollbar pb-1"></div>
+        <div class="bg-[#091428] border border-[#1e2328] mt-2 p-1">
+          <div id="day-tabs" class="flex overflow-x-auto gap-1 custom-scrollbar pb-2 snap-x scroll-smooth"></div>
+        </div>
       </div>
+
+      <!-- Volume Tracker -->
+      <div class="bg-neutral-800 border border-neutral-700 rounded-2xl p-5 shadow-lg my-4">
+        <h3 class="text-lg font-bold text-white mb-3 flex items-center gap-2">
+          <svg class="w-5 h-5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M14 14V7"/><path d="M10 14v-4"/><path d="M6 14v-2"/><path d="M18 14v-6"/></svg>
+          Daily Volume Completed (Sets)
+        </h3>
+        <div id="volume-stats" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2"></div>
+      </div>
+
+      <!-- Active Day Progress & Switcher -->
+      <div class="hex-panel p-5 shadow-lg">
+        <div class="flex justify-between items-end mb-4 border-b border-[#1e2328] pb-4">
+          <div>
+            <h2 id="current-day-title" class="text-xl font-black uppercase text-[#f0e6d2] tracking-wider"></h2>
+            <p id="progress-text" class="text-[#c89b3c] text-[10px] font-bold mt-1 uppercase tracking-widest">0 of 0 sets completed</p>
+          </div>
+          <span id="done-badge" class="hidden items-center gap-1.5 text-[#0ac8b9] text-xs font-black uppercase tracking-widest animate-pulse hex-text-glow">
+            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> SECURED
+          </span>
+        </div>
+        <div class="h-1 bg-[#010a13] border border-[#1e2328] w-full">
+          <div id="progress-bar" class="h-full bg-[#0ac8b9] transition-all duration-500 ease-out hex-glow-cyan" style="width: 0%"></div>
+        </div>
+        <div id="type-tabs" class="flex gap-2 mt-5"></div>
+      </div>
+
+      <div id="exercise-list" class="space-y-4 mt-6"></div>
       
-      <!-- Type Switcher Tabs (Dynamic vs Static) -->
-      <div id="type-tabs" class="flex gap-2 mt-5"></div>
+      <div id="reset-day-container" class="pt-8 flex flex-col items-center gap-5">
+        <button onclick="resetCurrentDay()" class="text-[#a09b8c] hover:text-[#e84057] text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors">
+          <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Initialize Hard Reset
+        </button>
+      </div>
     </div>
 
-    <!-- Exercise Roster -->
-    <div id="exercise-list" class="space-y-4 mt-6"></div>
-    
-    <div id="reset-day-container" class="pt-8 flex flex-col items-center gap-5">
-      <button onclick="resetCurrentDay()" class="text-[#a09b8c] hover:text-[#e84057] text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors">
-        <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Initialize Hard Reset
-      </button>
-
-      <!-- Progress Backup / Restore Controls -->
-      <div class="flex gap-3 border-t border-[#1e2328] pt-5 w-full justify-center">
-        <button onclick="exportProgressData()" class="px-5 py-2 bg-[#010a13] hover:bg-[#1e2328] border border-[#1e2328] hover:border-[#c89b3c] text-[10px] font-black uppercase tracking-widest text-[#a09b8c] hover:text-[#c89b3c] flex items-center gap-2 transition-all">
-          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Data
-        </button>
-        <button onclick="importProgressData()" class="px-5 py-2 bg-[#010a13] hover:bg-[#1e2328] border border-[#1e2328] hover:border-[#0ac8b9] text-[10px] font-black uppercase tracking-widest text-[#a09b8c] hover:text-[#0ac8b9] flex items-center gap-2 transition-all">
-          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Import Logic
-        </button>
+    <!-- ========================================== -->
+    <!-- VIEW 2: RPG SKILL TREE                     -->
+    <!-- ========================================== -->
+    <div id="view-skilltree" class="hidden space-y-6">
+      <div class="hex-panel p-6 shadow-2xl text-center border-t-2 border-[#0ac8b9]">
+        <h2 class="text-2xl font-black uppercase tracking-widest text-[#f0e6d2]">Adaptation Tree</h2>
+        <p class="text-[10px] text-[#a09b8c] uppercase tracking-widest mt-2 font-bold">Your cumulative volume unlocks physical milestones.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-[#091428] border border-[#1e2328] p-5 rounded-sm flex flex-col items-center text-center">
+          <h3 class="text-[#c89b3c] font-black uppercase tracking-widest text-xs mb-6">Strength & Power</h3>
+          <div class="flex flex-col items-center">
+            <div id="node-str-1" class="hex-node w-16 h-16 bg-[#010a13] border-2 border-[#4a545c] text-[#4a545c]"><span class="text-xl">1</span></div>
+            <p class="text-[10px] font-bold text-[#f0e6d2] uppercase tracking-wider mt-2">Bodyweight Control</p>
+            <div id="line-str-1" class="tree-line bg-[#1e2328]"></div>
+            <div id="node-str-2" class="hex-node w-16 h-16 bg-[#010a13] border-2 border-[#4a545c] text-[#4a545c]"><span class="text-xl">2</span></div>
+            <p class="text-[10px] font-bold text-[#f0e6d2] uppercase tracking-wider mt-2">External Load</p>
+            <div id="line-str-2" class="tree-line bg-[#1e2328]"></div>
+            <div id="node-str-3" class="hex-node w-16 h-16 bg-[#010a13] border-2 border-[#4a545c] text-[#4a545c]"><span class="text-xl">3</span></div>
+            <p class="text-[10px] font-bold text-[#f0e6d2] uppercase tracking-wider mt-2">Barbell Mastery</p>
+          </div>
+        </div>
+        <div class="bg-[#091428] border border-[#1e2328] p-5 rounded-sm flex flex-col items-center text-center border-t-2 border-[#0ac8b9]">
+          <h3 class="text-[#0ac8b9] font-black uppercase tracking-widest text-xs mb-6 hex-text-glow">Deep Range</h3>
+          <div class="flex flex-col items-center">
+            <div id="node-mob-1" class="hex-node w-16 h-16 bg-[#010a13] border-2 border-[#4a545c] text-[#4a545c]"><span class="text-xl">1</span></div>
+            <p class="text-[10px] font-bold text-[#f0e6d2] uppercase tracking-wider mt-2">Floor Touch</p>
+            <div id="line-mob-1" class="tree-line bg-[#1e2328]"></div>
+            <div id="node-mob-2" class="hex-node w-16 h-16 bg-[#010a13] border-2 border-[#4a545c] text-[#4a545c]"><span class="text-xl">2</span></div>
+            <p class="text-[10px] font-bold text-[#f0e6d2] uppercase tracking-wider mt-2">Pancake Stretch</p>
+            <div id="line-mob-2" class="tree-line bg-[#1e2328]"></div>
+            <div id="node-mob-3" class="hex-node w-16 h-16 bg-[#010a13] border-2 border-[#4a545c] text-[#4a545c]"><span class="text-xl">3</span></div>
+            <p class="text-[10px] font-bold text-[#f0e6d2] uppercase tracking-wider mt-2">Full Front Splits</p>
+          </div>
+        </div>
+        <div class="bg-[#091428] border border-[#1e2328] p-5 rounded-sm flex flex-col items-center text-center">
+          <h3 class="text-[#c89b3c] font-black uppercase tracking-widest text-xs mb-6">Work Capacity</h3>
+          <div class="flex flex-col items-center">
+            <div id="node-cap-1" class="hex-node w-16 h-16 bg-[#010a13] border-2 border-[#4a545c] text-[#4a545c]"><span class="text-xl">1</span></div>
+            <p class="text-[10px] font-bold text-[#f0e6d2] uppercase tracking-wider mt-2">Foundation</p>
+            <div id="line-cap-1" class="tree-line bg-[#1e2328]"></div>
+            <div id="node-cap-2" class="hex-node w-16 h-16 bg-[#010a13] border-2 border-[#4a545c] text-[#4a545c]"><span class="text-xl">2</span></div>
+            <p class="text-[10px] font-bold text-[#f0e6d2] uppercase tracking-wider mt-2">Iron Lungs</p>
+            <div id="line-cap-2" class="tree-line bg-[#1e2328]"></div>
+            <div id="node-cap-3" class="hex-node w-16 h-16 bg-[#010a13] border-2 border-[#4a545c] text-[#4a545c]"><span class="text-xl">3</span></div>
+            <p class="text-[10px] font-bold text-[#f0e6d2] uppercase tracking-wider mt-2">Relentless Engine</p>
+          </div>
+        </div>
       </div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- VIEW 3: GHOST MODE                         -->
+    <!-- ========================================== -->
+    <div id="view-ghost" class="hidden space-y-6">
+      <div class="hex-panel p-6 shadow-2xl text-center border-t-2 border-[#4a545c]">
+        <h2 class="text-2xl font-black uppercase tracking-widest text-[#f0e6d2]">Ghost Mode</h2>
+        <p class="text-[10px] text-[#a09b8c] uppercase tracking-widest mt-2 font-bold">Compete only against your past self. No public metrics.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+        <div class="hidden md:flex absolute inset-0 items-center justify-center pointer-events-none">
+          <div class="bg-[#010a13] border border-[#1e2328] w-10 h-10 rounded-full flex items-center justify-center z-10 shadow-lg">
+            <span class="text-xs font-black text-[#f0e6d2]">VS</span>
+          </div>
+        </div>
+        <!-- Ghost -->
+        <div class="bg-[#010a13] border border-[#1e2328] p-6 rounded-sm opacity-70">
+          <div class="flex items-center gap-3 mb-6 border-b border-[#1e2328] pb-4">
+            <svg class="w-6 h-6 text-[#4a545c]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <h3 class="text-[#a09b8c] font-black uppercase tracking-widest text-lg">Your Ghost</h3>
+          </div>
+          <div class="space-y-5">
+            <div>
+              <p class="text-[10px] font-bold text-[#4a545c] uppercase tracking-widest mb-1">Total Sets (30 Days)</p>
+              <p class="text-3xl font-black text-[#a09b8c]" id="ghost-sets">120</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-[#4a545c] uppercase tracking-widest mb-1">Consistency Score</p>
+              <p class="text-xl font-black text-[#a09b8c]" id="ghost-consistency">75%</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-[#4a545c] uppercase tracking-widest mb-1">Avg Output (RPE)</p>
+              <p class="text-xl font-black text-[#a09b8c]" id="ghost-rpe">7.2</p>
+            </div>
+          </div>
+        </div>
+        <!-- Player -->
+        <div class="bg-[#091428] border border-[#0ac8b9] p-6 rounded-sm hex-glow-cyan relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-[#0ac8b9] opacity-10 rounded-full blur-2xl"></div>
+          <div class="flex items-center gap-3 mb-6 border-b border-[#1e2328] pb-4 relative z-10">
+            <svg class="w-6 h-6 text-[#0ac8b9]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <h3 class="text-[#0ac8b9] font-black uppercase tracking-widest text-lg hex-text-glow">Current You</h3>
+          </div>
+          <div class="space-y-5 relative z-10">
+            <div>
+              <p class="text-[10px] font-bold text-[#a09b8c] uppercase tracking-widest mb-1">Total Sets (30 Days)</p>
+              <p class="text-3xl font-black text-[#f0e6d2]" id="player-sets">0</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-[#a09b8c] uppercase tracking-widest mb-1">Consistency Score</p>
+              <p class="text-xl font-black text-[#f0e6d2]" id="player-consistency">0%</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-[#a09b8c] uppercase tracking-widest mb-1">Avg Output (RPE)</p>
+              <p class="text-xl font-black text-[#f0e6d2]" id="player-rpe">0.0</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Settings Modal (Hextech Version) -->
+  <!-- Settings Modal -->
   <div id="settings-modal" class="fixed inset-0 bg-[#010a13]/90 flex items-center justify-center z-[100] hidden backdrop-blur-md p-4">
     <div class="hex-panel w-full max-w-2xl flex flex-col max-h-[90vh]">
       
-      <!-- Modal Header -->
       <div class="flex justify-between items-start p-6 pb-4 border-b border-[#1e2328]">
         <div>
           <span class="text-[#c89b3c] text-[10px] font-black uppercase tracking-[0.2em]">Configure</span>
@@ -211,31 +318,120 @@
         </button>
       </div>
 
-      <!-- Modal Body -->
       <div class="p-6 space-y-8 overflow-y-auto custom-scrollbar bg-[#010a13]/50">
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label class="block text-[10px] font-black uppercase tracking-wider text-[#a09b8c] mb-2">Operative Name</label>
-            <input type="text" id="setting-name" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] p-2.5 outline-none focus:border-[#0ac8b9] transition-colors text-sm font-bold placeholder-[#4a545c]" placeholder="e.g. Sal">
+        <!-- BIOMETRIC INTAKE (AI ENGINE) -->
+        <div>
+          <h3 class="text-sm font-black uppercase tracking-wider text-[#0ac8b9] mb-4 hex-text-glow flex items-center gap-2">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            AI Protocol Parameters
+          </h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label class="block text-[10px] font-black uppercase tracking-wider text-[#a09b8c] mb-2">Primary Directive (Goal)</label>
+              <select id="setting-ai-goal" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] p-2.5 outline-none focus:border-[#0ac8b9] transition-colors text-sm font-bold cursor-pointer appearance-none">
+                <option value="mobility">Mobility & Rehab</option>
+                <option value="hypertrophy">Strength & Hypertrophy</option>
+                <option value="combat">Combat Conditioning</option>
+                <option value="labor">Occupational Longevity</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-black uppercase tracking-wider text-[#a09b8c] mb-2">Experience Level</label>
+              <select id="setting-ai-exp" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] p-2.5 outline-none focus:border-[#0ac8b9] transition-colors text-sm font-bold cursor-pointer appearance-none">
+                <option value="beginner">Rookie</option>
+                <option value="intermediate" selected>Veteran</option>
+                <option value="advanced">Elite</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-black uppercase tracking-wider text-[#a09b8c] mb-2">Schedule (Days/Week)</label>
+              <select id="setting-ai-days" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] p-2.5 outline-none focus:border-[#0ac8b9] transition-colors text-sm font-bold cursor-pointer appearance-none">
+                <option value="2">2 Days</option>
+                <option value="3" selected>3 Days</option>
+                <option value="4">4 Days</option>
+                <option value="5">5 Days</option>
+                <option value="6">6 Days</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-black uppercase tracking-wider text-[#a09b8c] mb-2">Time Commitment</label>
+              <select id="setting-ai-time" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] p-2.5 outline-none focus:border-[#0ac8b9] transition-colors text-sm font-bold cursor-pointer appearance-none">
+                <option value="15">15 Minutes</option>
+                <option value="30">30 Minutes</option>
+                <option value="45" selected>45 Minutes</option>
+                <option value="60">60+ Minutes</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label class="block text-[10px] font-black uppercase tracking-wider text-[#a09b8c] mb-2">Initialization Date</label>
-            <input type="date" id="setting-date" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] p-2.5 outline-none focus:border-[#0ac8b9] transition-colors text-sm font-bold [color-scheme:dark]">
+
+          <div class="mb-6">
+            <label class="block text-[10px] font-black uppercase tracking-wider text-[#a09b8c] mb-2">Inventory Loadout (Equipment)</label>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="eq-dumbbells" class="w-4 h-4 accent-[#0ac8b9] bg-[#010a13] border-[#1e2328]">
+                <span class="text-xs font-bold text-[#f0e6d2] uppercase tracking-wider">Dumbbells</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="eq-kettlebells" class="w-4 h-4 accent-[#0ac8b9] bg-[#010a13] border-[#1e2328]">
+                <span class="text-xs font-bold text-[#f0e6d2] uppercase tracking-wider">Kettlebells</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="eq-barbell" class="w-4 h-4 accent-[#0ac8b9] bg-[#010a13] border-[#1e2328]">
+                <span class="text-xs font-bold text-[#f0e6d2] uppercase tracking-wider">Barbell</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="eq-pullup" class="w-4 h-4 accent-[#0ac8b9] bg-[#010a13] border-[#1e2328]">
+                <span class="text-xs font-bold text-[#f0e6d2] uppercase tracking-wider">Pull-Up Bar</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="eq-bench" class="w-4 h-4 accent-[#0ac8b9] bg-[#010a13] border-[#1e2328]">
+                <span class="text-xs font-bold text-[#f0e6d2] uppercase tracking-wider">Bench</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="eq-bands" class="w-4 h-4 accent-[#0ac8b9] bg-[#010a13] border-[#1e2328]">
+                <span class="text-xs font-bold text-[#f0e6d2] uppercase tracking-wider">Res Bands</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="eq-sliders" class="w-4 h-4 accent-[#0ac8b9] bg-[#010a13] border-[#1e2328]">
+                <span class="text-xs font-bold text-[#f0e6d2] uppercase tracking-wider">Sliders</span>
+              </label>
+            </div>
           </div>
+          
+          <div class="mb-6">
+             <label class="block text-[10px] font-black uppercase tracking-wider text-[#a09b8c] mb-2">Describe Your Goals, Injuries, & Concerns</label>
+             <textarea id="setting-ai-context" rows="3" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] p-2.5 outline-none focus:border-[#0ac8b9] transition-colors text-sm font-bold placeholder-[#4a545c] custom-scrollbar" placeholder="Enter whatever information you feel is needed to create the best workout plan possible..."></textarea>
+          </div>
+
+          <button id="ai-generate-btn" onclick="requestAIPlan()" class="w-full px-5 py-3 bg-[#0ac8b9]/10 border border-[#0ac8b9] hover:bg-[#0ac8b9] text-xs font-black uppercase tracking-widest text-[#0ac8b9] hover:text-[#010a13] transition-all hex-glow-cyan flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(10,200,185,0.2)]">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            Initialize Custom AI Protocol
+          </button>
         </div>
 
         <hr class="border-[#1e2328]">
 
+        <!-- Developer Test Node -->
+        <div class="bg-[#1e2328]/30 p-4 border border-[#1e2328] rounded-sm">
+          <h3 class="text-[10px] font-black uppercase tracking-wider text-[#f0e6d2] mb-3 flex items-center gap-1.5">
+            <svg class="w-3 h-3 text-[#c89b3c]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Developer Test Node (API Key)
+          </h3>
+          <p class="text-[9px] text-[#a09b8c] mb-3 leading-relaxed uppercase">Enter your Gemini API key here.</p>
+          <input type="password" id="setting-api-key" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] p-2 outline-none focus:border-[#c89b3c] transition-colors text-xs font-mono placeholder-[#4a545c]" placeholder="Paste API Key here...">
+        </div>
+
+        <hr class="border-[#1e2328]">
+
+        <!-- Interface Settings -->
         <div>
           <h3 class="text-sm font-black uppercase tracking-wider text-[#c89b3c] mb-4">Interface Preferences</h3>
-          
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <label class="block text-[10px] font-black uppercase tracking-wider text-[#a09b8c] mb-2">Visual Theme</label>
-              <select id="setting-theme" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] p-2.5 outline-none focus:border-[#0ac8b9] transition-colors text-sm font-bold cursor-pointer appearance-none">
-                <option value="dark">Hextech Dark</option>
-              </select>
+              <label class="block text-[10px] font-black uppercase tracking-wider text-[#a09b8c] mb-2">Operative Name</label>
+              <input type="text" id="setting-name" class="w-full bg-[#010a13] border border-[#1e2328] text-[#f0e6d2] p-2.5 outline-none focus:border-[#0ac8b9] transition-colors text-sm font-bold placeholder-[#4a545c]" placeholder="e.g. Sal">
             </div>
             <div>
               <label class="block text-[10px] font-black uppercase tracking-wider text-[#a09b8c] mb-2">Default Rest Duration</label>
@@ -279,36 +475,61 @@
         <div>
           <h3 class="text-sm font-black uppercase tracking-wider text-[#e84057] mb-4">Critical Override</h3>
           <button onclick="eraseAllProgress()" class="px-5 py-2.5 bg-[#e84057]/10 border border-[#e84057] hover:bg-[#e84057] text-xs font-black uppercase tracking-widest text-[#e84057] hover:text-white transition-all shadow-[0_0_10px_rgba(232,64,87,0.2)]">
-            Purge Database
+            Purge Tracking Database
+          </button>
+          <button onclick="revertToDefaultPlan()" class="mt-3 px-5 py-2.5 bg-[#a09b8c]/10 border border-[#a09b8c] hover:bg-[#a09b8c] text-xs font-black uppercase tracking-widest text-[#a09b8c] hover:text-[#010a13] transition-all">
+            Revert to Default Plan
           </button>
         </div>
-
       </div>
 
       <!-- Modal Footer -->
-      <div class="p-4 flex justify-end gap-3 border-t border-[#1e2328] bg-[#091428]">
-        <button onclick="closeSettings()" class="px-6 py-2.5 bg-[#010a13] border border-[#1e2328] hover:border-[#a09b8c] text-[10px] font-black uppercase tracking-widest text-[#a09b8c] transition-colors">
-          Abort
-        </button>
-        <button onclick="saveSettings()" class="px-6 py-2.5 bg-[#c89b3c]/10 border border-[#c89b3c] hover:bg-[#c89b3c] text-[10px] font-black uppercase tracking-widest text-[#c89b3c] hover:text-[#010a13] transition-all hex-glow-gold">
-          Confirm
+      <div class="p-4 flex justify-end border-t border-[#1e2328] bg-[#091428]">
+        <button id="save-confirm-btn" onclick="saveSettings()" class="px-6 py-2.5 bg-[#c89b3c]/10 border border-[#c89b3c] hover:bg-[#c89b3c] text-[10px] font-black uppercase tracking-widest text-[#c89b3c] hover:text-[#010a13] transition-all hex-glow-gold">
+          CONFIRM
         </button>
       </div>
 
     </div>
   </div>
 
+  <!-- AI GENERATION LOADING MODAL -->
+  <div id="ai-loading-modal" class="fixed inset-0 bg-[#010a13]/95 flex items-center justify-center z-[200] hidden backdrop-blur-md p-4">
+    <div class="hex-panel p-8 max-w-md w-full text-center flex flex-col items-center border-t-2 border-[#0ac8b9] shadow-[0_0_30px_rgba(10,200,185,0.15)] relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-32 h-32 bg-[#0ac8b9] opacity-10 rounded-full blur-3xl pointer-events-none"></div>
+      
+      <div id="ai-icon-container" class="mb-4">
+        <!-- Spinner -->
+        <svg id="ai-spinner" class="w-12 h-12 text-[#0ac8b9] animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        <!-- Success Checkmark -->
+        <svg id="ai-success-icon" class="w-12 h-12 text-green-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <!-- Error -->
+        <svg id="ai-error-icon" class="w-12 h-12 text-[#e84057] hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+      </div>
+
+      <h2 id="ai-loading-title" class="text-xl font-black uppercase text-[#0ac8b9] tracking-widest mb-2 hex-text-glow">Generating Custom Protocol</h2>
+      <p id="ai-loading-desc" class="text-[10px] text-[#a09b8c] uppercase tracking-widest font-bold mb-6">Uplinking to Gemini Core... Stand by.</p>
+      
+      <div class="h-1.5 bg-[#010a13] border border-[#1e2328] w-full mb-6 relative overflow-hidden">
+         <div id="ai-loading-bar" class="h-full bg-[#0ac8b9] w-0 hex-glow-cyan transition-all duration-300"></div>
+      </div>
+
+      <button id="ai-close-btn" onclick="finishAISequence()" class="hidden px-8 py-3 bg-[#0ac8b9]/10 border border-[#0ac8b9] hover:bg-[#0ac8b9] text-xs font-black uppercase tracking-widest text-[#0ac8b9] hover:text-[#010a13] transition-all hex-glow-cyan mt-2">
+        Initialize Routine
+      </button>
+    </div>
+  </div>
+
   <script>
     const phases = [
-      { id: 'p1', name: 'Weeks 1-3: Adaptation', desc: 'Use 10-20lb KB. 3-second negative (lowering) on every rep. Focus on tendon health.' },
-      { id: 'p2', name: 'Weeks 4-6: Overload', desc: 'Introduce Barbell/45lb KB. Push reps to the higher end. Focus on muscle density.' },
-      { id: 'p3', name: 'Weeks 7-8: Deep Range', desc: 'Add 10lb KB to ATG/Cossack squats. Elevate foot on split squats. Hold stretches 3 mins.' },
-      { id: 'p4', name: 'Weeks 9-10: Peak Output', desc: 'Heaviest safe weights. Actively pull yourself into deep splits during stretching.' }
+      { id: 'p1', name: 'Weeks 1-3: Adaptation', desc: 'Base adaptation and movement familiarity.' },
+      { id: 'p2', name: 'Weeks 4-6: Overload', desc: 'Increasing volume and resistance.' },
+      { id: 'p3', name: 'Weeks 7-8: Deep Range', desc: 'Focusing on end-range strength.' },
+      { id: 'p4', name: 'Weeks 9-10: Peak Output', desc: 'Heaviest loads and max effort.' }
     ];
 
     const categoriesList = ["Main Plan", "ATG"];
 
-    // Day 5, 6, 7 generic stretch arrays to inject into all phases
     const day5Array = [
       { name: "Cat-Cow Flow", type: "dynamic", sets: 2, reps: "15 cycles", rest: 30, restStr: "30s trans.", notes: "On all fours, slowly alternate arching and rounding your spine.", advanced: "Focus on articulating one single vertebra at a time.", regression: "Seated cat-cow on a chair if wrists hurt." },
       { name: "Bird Dog", type: "dynamic", sets: 2, reps: "10 / side", rest: 30, restStr: "30s trans.", tempo: [2, 1, 1, 2], notes: "Extend opposite arm and leg, squeeze core to prevent lower back arch.", advanced: "Perform from a plank position (knees off floor).", regression: "Only extend the arms, or only extend the legs (not both at once)." },
@@ -330,202 +551,51 @@
       { name: "Seated IT Band Twist", type: "static", sets: 1, reps: "2 mins / side", holdTime: 120, rest: 30, restStr: "30s trans.", notes: "Cross leg over straight leg, hug knee to chest and twist torso.", advanced: "Hook elbow completely outside knee, tall spine.", regression: "Lie on your back and gently pull the knee across your body." }
     ];
 
-    const workoutData = {
+    const defaultWorkoutData = {
       "Main Plan": {
-        p1: {
-          "Day 1: Hips & Glutes": [
-            { name: "Banded Glute Bridges", sets: 4, reps: "15-20", rest: 60, restStr: "60-90s", tempo: [1, 0, 1, 3], notes: "Short band above knees. Drive knees out, squeeze hard.", advanced: "Use thickest band, 3-sec pause at the top of every rep.", regression: "Bodyweight glute bridges with no band." },
-            { name: "Res Band Hip Flexor Marches", sets: 4, reps: "8 / leg", rest: 60, restStr: "60s", tempo: [3, 0, 1, 0], notes: "Use a light band. Focus purely on a slow, 3-second negative.", advanced: "Add a 2-second isometric pause at the top.", regression: "Seated knee lifts with no band." },
-            { name: "20lb KB Goblet Squats", sets: 4, reps: "10-12", rest: 90, restStr: "90-120s", tempo: [5, 0, 1, 0], notes: "Squat shoes on. Sink as deep as hips allow pain-free.", advanced: "45lb KB with a 5-second slow lowering phase.", regression: "Bodyweight squats to a box/chair." },
-            { name: "Copenhagen Adductor Planks", sets: 4, reps: "20s / side", holdTime: 20, rest: 60, restStr: "45-60s", notes: "Short-lever (knee on bench). Keeps tension strictly on the inner thighs.", advanced: "Add 10s to the hold time each week.", regression: "Side plank with bottom knee resting on the floor." }
+        "p1": {
+          "Day 1: Lower": [
+            { "name": "Goblet Squats", "sets": 4, "reps": "10-12", "rest": 90, "tempo": [3, 0, 1, 0], "notes": "Focus on depth and control.", "regression": "Bodyweight squats to a box." },
+            { "name": "Banded Glute Bridges", "sets": 3, "reps": "15", "rest": 60, "tempo": [1, 0, 1, 2], "notes": "Squeeze at the top.", "regression": "Unbanded glute bridges." }
           ],
-          "Day 2: Back & Knees": [
-            { name: "45lb KB RDLs", sets: 4, reps: "10", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "3-second slow negative. Deep hamstring stretch.", advanced: "Upgrade to 135lb Barbell with perfect form.", regression: "Bodyweight hip hinges or very light DBs." },
-            { name: "Terminal Knee Extensions (TKEs)", sets: 4, reps: "20 / leg", rest: 60, restStr: "60s", tempo: [1, 0, 1, 1], notes: "Long band behind knee. Repeatedly straighten to pump blood.", advanced: "Use thickest band, aggressive quad flex at lockout.", regression: "Sit on a chair and just extend leg straight (no band)." },
-            { name: "Pull-up Negatives", sets: 4, reps: "5-8", rest: 90, restStr: "90s", tempo: [4, 0, 1, 0], notes: "Jump up, slowly lower yourself over 3-5 seconds.", advanced: "Strict unassisted pull-ups for 10 reps.", regression: "Inverted rows under a barbell or TRX." },
-            { name: "Banded Hamstring Curls", sets: 4, reps: "15", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Anchor long band, lie face down on bench, curl to glutes.", advanced: "Hold a 10lb dumbbell between your feet.", regression: "Slider hamstring curls on the floor using socks." }
-          ],
-          "Day 3: Deep Range Mobility": [
-            { name: "45lb KB Hip Thrusts", sets: 4, reps: "12", rest: 90, restStr: "90-120s", tempo: [1, 0, 1, 2], notes: "Upper back on bench. Squeeze at the top.", advanced: "Barbell loaded with 135lbs, 2-sec hold at top.", regression: "Bodyweight hip thrusts or floor glute bridges." },
-            { name: "Slider Lateral Lunges", sets: 4, reps: "6-8 / side", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Use sliders. Push straight leg out, pull back using only the adductor.", advanced: "Hold a 20lb KB goblet style.", regression: "Don't go as deep, or hold onto a wall/rack for support." },
-            { name: "Bodyweight Bulgarian Split Squats", sets: 4, reps: "8-10 / leg", rest: 90, restStr: "90s", tempo: [2, 0, 1, 0], notes: "Back foot elevated on bench.", advanced: "Hold 20lb dumbbells in each hand.", regression: "Standard split squats (both feet on the floor)." },
-            { name: "Seated Good Mornings (Empty Bar)", sets: 4, reps: "10", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Sit on bench. Hinge forward at hips.", advanced: "Add 10lb plates per side, chest touches bench.", regression: "Use a broomstick or bodyweight only." }
-          ],
-          "Day 4: Core & Posterior": [
-            { name: "20lb KB Single-Leg Deadlifts", sets: 4, reps: "8 / leg", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Balance and glute activation on the planted leg.", advanced: "45lb KB, perfect balance without tapping down.", regression: "Kickstand stance (rest back toe lightly on the floor for balance)." },
-            { name: "Roman Chair Back Extensions", sets: 4, reps: "10", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Neutral spine. Hinge at hips, use erectors to lift.", advanced: "Hold a 25lb plate behind your head.", regression: "Superman holds lying flat on the floor." },
-            { name: "45lb KB Suitcase Carries", sets: 4, reps: "40s / side", holdTime: 40, rest: 60, restStr: "45-60s", notes: "Heavy KB one hand. Walk. Forces core stability.", advanced: "70lb Kettlebell or heavy dumbbell, zero torso lean.", regression: "Use a lighter dumbbell or walk a shorter distance." },
-            { name: "Assisted Reverse Nordic Curls", sets: 4, reps: "6-8", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Kneel, hold long band in front for support, lean back.", advanced: "Unassisted, leaning back until shoulders hover 6 inches off floor.", regression: "Use a much thicker band for max assistance, limit range." }
-          ],
-          "Day 5: Light Dynamic & Stretch": day5Array,
-          "Day 6: Mobility & Flow": day6Array,
-          "Day 7: Deep Restorative": day7Array
+          "Day 2: Upper": [
+            { "name": "Pull-up Negatives", "sets": 4, "reps": "5-8", "rest": 90, "tempo": [4, 0, 1, 0], "notes": "Slow 4-second descent.", "regression": "Inverted rows under a bar." },
+            { "name": "Push-ups", "sets": 3, "reps": "10", "rest": 60, "tempo": [2, 0, 1, 0], "notes": "Chest to floor.", "regression": "Knee push-ups." }
+          ]
         },
-        p2: {
-          "Day 1: Hips & Glutes": [
-            { name: "Barbell Hip Thrusts", sets: 4, reps: "8-10", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Load up the barbell. Explosive up, control down.", advanced: "225lbs+, explosive concentric, 3-sec lowering.", regression: "Dumbbell hip thrusts or single-leg glute bridges." },
-            { name: "Weighted Knee Raises", sets: 4, reps: "10 / leg", rest: 60, restStr: "60s", tempo: [2, 0, 1, 1], notes: "Hold DB between feet or use heavy band.", advanced: "Hang from pull-up bar, strict straight leg raises to bar.", regression: "Lying dead-bugs or unweighted marching." },
-            { name: "Barbell Back Squats", sets: 4, reps: "8-10", rest: 120, restStr: "2 mins", tempo: [2, 0, 1, 0], notes: "Squat shoes on. Add weight, hit depth safely.", advanced: "Bodyweight on the bar, deep ATG depth.", regression: "Goblet squats or reduced range of motion box squats." },
-            { name: "Copenhagen Adductor Planks", sets: 4, reps: "20s / side", holdTime: 20, rest: 60, restStr: "60s", notes: "Long-lever (foot on bench). Ultimate adductor strength builder.", advanced: "Hold a light dumbbell on your top hip.", regression: "Short-lever (knee on bench instead of foot)." }
-          ],
-          "Day 2: Back & Knees": [
-            { name: "Barbell RDLs", sets: 4, reps: "8", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Increase weight. Maintain perfect straight back.", advanced: "Bodyweight on the bar, deep stretch without rounding.", regression: "Kettlebell RDLs." },
-            { name: "Weighted Step-Ups", sets: 4, reps: "10 / leg", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Hold DB/KBs. Step onto bench.", advanced: "Hold 45lb KBs, controlled 3-sec descent.", regression: "Unweighted step-ups onto a lower box." },
-            { name: "Pull-ups (Standard)", sets: 4, reps: "Near Failure", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 0], notes: "Full range of motion, from a dead hang.", advanced: "Weighted pull-ups with a 25lb plate.", regression: "Band-assisted pull-ups or negatives." },
-            { name: "Nordic Hamstring Eccentrics", sets: 4, reps: "5", rest: 90, restStr: "90-120s", tempo: [4, 0, 1, 0], notes: "Anchor feet under loaded barbell. Lower slowly.", advanced: "Control the descent all the way to the floor with no catch.", regression: "Swiss ball or slider hamstring curls." }
-          ],
-          "Day 3: Deep Range Mobility": [
-            { name: "Heavy Goblet Squats", sets: 4, reps: "10", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "45lb KB. Push range of motion deeper.", advanced: "70lb KB. No pausing at the bottom to protect knees.", regression: "Heel-elevated bodyweight squats." },
-            { name: "Slider Lateral Lunges", sets: 4, reps: "6-8 / side", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Use sliders. Push straight leg out, pull back using only adductor.", advanced: "Hold a 20lb KB goblet style.", regression: "Static side lunges (no sliding)." },
-            { name: "Barbell Bulgarian Split Squats", sets: 4, reps: "8 / leg", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 0], notes: "Use empty bar or add plates if comfortable.", advanced: "95lbs on the bar, deep stretch.", regression: "Dumbbell Bulgarian split squats." },
-            { name: "Seated Barbell Good Mornings", sets: 4, reps: "8-10", rest: 90, restStr: "90s", tempo: [2, 0, 1, 1], notes: "Add light plates. Arch lower back.", advanced: "95lbs on the bar, maintain arch.", regression: "Empty bar or kettlebell held to chest." }
-          ],
-          "Day 4: Core & Posterior": [
-            { name: "Barbell Stiff-Leg Deadlifts", sets: 4, reps: "8", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Like RDLs but legs straighter. Lighter weight.", advanced: "Standing on a 2-inch deficit block for max stretch.", regression: "Standard RDLs with a slight knee bend." },
-            { name: "Weighted Back Extensions", sets: 4, reps: "10", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Hold 10lb or 20lb KB on Roman Chair.", advanced: "45lb plate or 50lb dumbbell.", regression: "Bodyweight back extensions." },
-            { name: "Heavy Farmer's Carry", sets: 4, reps: "40s", holdTime: 40, rest: 60, restStr: "60s", notes: "45lb KB in one hand, heavy DB in the other.", advanced: "70lb KBs in both hands, 60 seconds.", regression: "Lighter weights or shorter durations." },
-            { name: "Unassisted Reverse Nordics", sets: 4, reps: "6-8", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "No band. Go as far back as quads can handle.", advanced: "Shoulders softly touch the floor and pull back up.", regression: "Hold a band to assist the pull back up." }
-          ],
-          "Day 5: Light Dynamic & Stretch": day5Array,
-          "Day 6: Mobility & Flow": day6Array,
-          "Day 7: Deep Restorative": day7Array
-        },
-        p3: {
-          "Day 1: Hips & Glutes": [
-            { name: "Deficit Reverse Lunges", sets: 4, reps: "10 / leg", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 0], notes: "Stand on a plate. Step back and drop knee deep.", advanced: "Barbell on back, 4-inch deficit block.", regression: "Flat ground reverse lunges." },
-            { name: "Banded Psoas Holds", sets: 4, reps: "30s / leg", holdTime: 30, rest: 60, restStr: "60s", notes: "Drive knee up against band and hold.", advanced: "Attach kettlebell to foot via monkey foot/strap.", regression: "Iso-hold without a band (just squeeze leg up)." },
-            { name: "ATG Goblet Squats", sets: 4, reps: "12", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 0], notes: "45lb KB. Squat shoes. Hamstrings touch calves.", advanced: "Elevate heels on slant board, 70lb KB.", regression: "Standard depth goblet squat." },
-            { name: "Single-Leg Glute Bridges", sets: 4, reps: "10 / leg", rest: 60, restStr: "60-90s", tempo: [1, 0, 1, 2], notes: "Foot elevated on bench. Drive hips up.", advanced: "Shoulders on bench, 45lb plate on working hip.", regression: "Both feet on the bench." }
-          ],
-          "Day 2: Back & Knees": [
-            { name: "Deficit Barbell RDLs", sets: 4, reps: "8", rest: 120, restStr: "2 mins", tempo: [3, 0, 1, 0], notes: "Stand on a weight plate for extra stretch at bottom.", advanced: "Stand on 45lb plate, bar touches toes.", regression: "Standard RDLs (no deficit)." },
-            { name: "Poliquin Step-Ups", sets: 4, reps: "12 / leg", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 0], notes: "Heel elevated. Target the VMO (teardrop quad muscle).", advanced: "Hold 50% bodyweight, 6-inch step height.", regression: "Flat ground Patrick step-ups." },
-            { name: "Wide-Grip Pull-ups", sets: 4, reps: "Near Failure", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 0], notes: "Wider grip to target lats and teres major.", advanced: "Chest touches the bar on every rep.", regression: "Standard shoulder-width grip." },
-            { name: "Slider Hamstring Curls", sets: 4, reps: "12", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Use socks on smooth floor or towels. Curl heels to glutes.", advanced: "Single-leg slider curls.", regression: "Banded hamstring curls." }
-          ],
-          "Day 3: Deep Range Mobility": [
-            { name: "Single-Leg Hip Thrusts", sets: 4, reps: "10 / leg", rest: 60, restStr: "60-90s", tempo: [1, 0, 1, 2], notes: "Shoulders on bench. Bodyweight or 10lb KB.", advanced: "Hold 45lb plate on the working hip.", regression: "Standard hip thrusts (both legs down)." },
-            { name: "Slider Lateral Lunges", sets: 4, reps: "6-8 / side", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Use sliders. Push straight leg out, pull back using only adductor.", advanced: "Hold a 20lb KB goblet style.", regression: "Hold onto a rack for assistance pulling back up." },
-            { name: "Front-Foot Elevated Split Squats", sets: 4, reps: "8 / leg", rest: 90, restStr: "90-120s", tempo: [2, 1, 1, 0], notes: "Front foot on a plate. Massive hip flexor stretch.", advanced: "Barbell loaded, massive trailing hip stretch.", regression: "Flat ground split squats." },
-            { name: "Jefferson Curls", sets: 4, reps: "10", rest: 60, restStr: "60-90s", tempo: [4, 0, 1, 0], notes: "Empty barbell. Round spine vertebra by vertebra. Light weight!", advanced: "60lb KB, stand on box, wrists go below toes.", regression: "Elephant walks (no weight)." }
-          ],
-          "Day 4: Core & Posterior": [
-            { name: "B-Stance Barbell RDLs", sets: 4, reps: "8 / leg", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Kickstand one foot back for balance, isolate front leg.", advanced: "135lbs+, pure isolation on the front hamstring.", regression: "Standard Barbell RDLs." },
-            { name: "Superman Holds", sets: 4, reps: "30s", holdTime: 30, rest: 60, restStr: "60s", notes: "Lie on stomach, lift arms and legs. Hold and squeeze.", advanced: "Hold light plates in hands, 60s continuous.", regression: "Only lift the upper body, keep legs on the floor." },
-            { name: "Overhead KB Carry", sets: 4, reps: "30s / side", holdTime: 30, rest: 60, restStr: "60s", notes: "20lb KB locked out overhead. Walk. Ultimate core brace.", advanced: "45lb KB, perfect shoulder alignment.", regression: "Rack carry (hold KB at shoulder height instead of overhead)." },
-            { name: "Deep Reverse Nordics", sets: 4, reps: "6", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 0], notes: "Hold 10lb KB to chest. Lean back into extreme stretch.", advanced: "Hold 25lb plate to chest, full range to floor.", regression: "Unweighted reverse nordics." }
-          ],
-          "Day 5: Light Dynamic & Stretch": day5Array,
-          "Day 6: Mobility & Flow": day6Array,
-          "Day 7: Deep Restorative": day7Array
-        },
-        p4: {
-          "Day 1: Hips & Glutes": [
-            { name: "Heavy Barbell Squats", sets: 4, reps: "5-8", rest: 180, restStr: "2-3 mins", tempo: [2, 0, 1, 0], notes: "Heaviest weight. Full range of motion.", advanced: "1.5x Bodyweight, full ATG depth.", regression: "Lighter load or Box Squats." },
-            { name: "Hanging Leg Raises", sets: 4, reps: "10", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 1], notes: "Hang from pullup bar. Bring toes as high as possible.", advanced: "Strict toes-to-bar with zero swinging.", regression: "Hanging knee tucks." },
-            { name: "Middle Split Isometrics", type: "static", sets: 4, reps: "30s", holdTime: 30, rest: 60, restStr: "60s", notes: "Slide out into middle split. Actively press feet into floor.", advanced: "Hold dumbbells, lift self off floor using only inner thighs.", regression: "Frog stretch on elbows." },
-            { name: "Heavy Roman Chair Glute Ext", sets: 4, reps: "10", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 2], notes: "Hold 20lb or 45lb KB. Glutes doing all the work.", advanced: "Hold 70lb KB or barbell across back.", regression: "Bodyweight glute extensions." }
-          ],
-          "Day 2: Back & Knees": [
-            { name: "Heavy Barbell RDLs", sets: 4, reps: "5-8", rest: 180, restStr: "2-3 mins", tempo: [3, 0, 1, 0], notes: "Max weight with perfect neutral spine.", advanced: "1.5x Bodyweight, flawless flat back.", regression: "Lighter load to maintain form." },
-            { name: "Front Squats (Barbell)", sets: 4, reps: "8", rest: 120, restStr: "2 mins", tempo: [2, 0, 1, 0], notes: "Rest bar on front delts. Incredibly demanding on core/quads.", advanced: "Bodyweight on the bar, upright torso.", regression: "Goblet squats or Zombie squats." },
-            { name: "Weighted Pull-ups", sets: 4, reps: "5-8", rest: 120, restStr: "2 mins", tempo: [2, 0, 1, 0], notes: "Hold DB between feet. Pure upper body power.", advanced: "45lb plate attached to dip belt.", regression: "Bodyweight pull-ups." },
-            { name: "Nordic Hamstring Curls", sets: 4, reps: "5", rest: 90, restStr: "90-120s", tempo: [4, 0, 1, 0], notes: "Try to control the descent all the way to the floor.", advanced: "Full unassisted concentric (pulling yourself back up).", regression: "Only do the eccentric with a hand catch." }
-          ],
-          "Day 3: Deep Range Mobility": [
-            { name: "Heavy Barbell Hip Thrusts", sets: 4, reps: "6-8", rest: 120, restStr: "2 mins", tempo: [1, 0, 1, 2], notes: "Max weight. 2-second hold at the top.", advanced: "2x Bodyweight, 3-sec pause at lockout.", regression: "Reduce weight and focus purely on the squeeze." },
-            { name: "Heavy Slider Lateral Lunges", sets: 4, reps: "6 / side", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Heaviest safe weight. Maximize the stretch on the straight leg.", advanced: "Hold a 45lb KB.", regression: "Bodyweight slider lunges." },
-            { name: "Heavy DB Bulgarian Split Squats", sets: 4, reps: "8 / leg", rest: 120, restStr: "2 mins", tempo: [2, 3, 1, 0], notes: "Max depth. Let the back knee hover over floor.", advanced: "2x 50lb+ DBs, 3-second pause at bottom.", regression: "Bodyweight Bulgarian split squats." },
-            { name: "Front Split Isometrics", type: "static", sets: 4, reps: "30s / side", holdTime: 30, rest: 60, restStr: "60s", notes: "Use rack for support. Actively pull into front split.", advanced: "Zero hand support, actively lifting bodyweight with legs.", regression: "Couch stretch." }
-          ],
-          "Day 4: Core & Posterior": [
-            { name: "Heavy Single-Leg KB DL", sets: 4, reps: "6 / leg", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Use 45lb KB. Impeccable balance.", advanced: "70lb KB, or dual 45lb KBs.", regression: "Lighter KB, or kickstand stance." },
-            { name: "Heavy Roman Chair Back Ext", sets: 4, reps: "8", rest: 90, restStr: "90-120s", tempo: [2, 0, 1, 1], notes: "Hold 45lb KB. Smooth, controlled reps.", advanced: "Barbell held on back (Good morning style).", regression: "Bodyweight back extensions." },
-            { name: "Zercher Carries", sets: 4, reps: "40s", holdTime: 40, rest: 90, restStr: "90s", notes: "Hold loaded barbell in the crooks of your elbows. Walk.", advanced: "Heavy loaded barbell, 60s unbroken walk.", regression: "Front rack kettlebell carry." },
-            { name: "Advanced Reverse Nordics", sets: 4, reps: "5", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Try to touch your shoulders to the floor behind you.", advanced: "Hold 45lb plate, full range.", regression: "Bodyweight reverse nordics." }
-          ],
-          "Day 5: Light Dynamic & Stretch": day5Array,
-          "Day 6: Mobility & Flow": day6Array,
-          "Day 7: Deep Restorative": day7Array
-        }
+        "p2": { "Day 1: Base": [ { "name": "Squats", "sets": 4, "reps": "10", "rest": 60 } ] },
+        "p3": { "Day 1: Base": [ { "name": "Squats", "sets": 4, "reps": "10", "rest": 60 } ] },
+        "p4": { "Day 1: Base": [ { "name": "Squats", "sets": 4, "reps": "10", "rest": 60 } ] }
       },
       "ATG": {
-        "Workout 1: Lower Foundations": [
-          { name: "ATG Split Squats", sets: 4, reps: "5 / leg", rest: 90, restStr: "90-120s", tempo: [3, 0, 1, 0], notes: "Squat shoes on. Max forward knee travel.", advanced: "Hold 50% of your bodyweight in dumbbells.", regression: "Front foot elevated on a high step/box." },
-          { name: "KOT Calf Raises", sets: 3, reps: "15", rest: 45, restStr: "45-60s", tempo: [2, 1, 1, 2], notes: "Deep knee bend, drive up onto toes.", advanced: "Single leg KOT calf raises.", regression: "Hold onto a rack heavily for support." },
-          { name: "Poliquin Step-Ups", sets: 3, reps: "15 / leg", rest: 60, restStr: "60-90s", tempo: [2, 0, 1, 0], notes: "Elevate heel. Bend knee to touch opposite heel to floor.", advanced: "Hold heavy dumbbells.", regression: "Use a lower step height." },
-          { name: "Tibialis Raises", sets: 3, reps: "25", rest: 45, restStr: "45-60s", tempo: [1, 0, 1, 2], notes: "Lean back on wall, legs straight, lift toes.", advanced: "Use a Tib-Bar.", regression: "Stand closer to the wall." }
-        ],
-        "Workout 2: Upper & Spine": [
-          { name: "Powell Raises", sets: 3, reps: "10 / arm", rest: 60, restStr: "60s", tempo: [3, 0, 1, 1], notes: "Lie on side, raise DB straight up. Bulletproofs shoulders.", advanced: "10% of bodyweight for 10 reps.", regression: "Use a very light weight or no weight." },
-          { name: "Trap-3 Raises", sets: 3, reps: "10 / arm", rest: 60, restStr: "60s", tempo: [2, 0, 1, 2], notes: "Support chest on bench, lift arm in Y-shape.", advanced: "10% of bodyweight for 10 reps.", regression: "Perform unweighted." },
-          { name: "Slant Board Jefferson Curls", sets: 3, reps: "10", rest: 60, restStr: "60-90s", tempo: [4, 0, 1, 0], notes: "Toes elevated. Round spine slowly.", advanced: "25% of bodyweight.", regression: "Flat ground, no weight." },
-          { name: "External Rotations", sets: 3, reps: "15 / arm", rest: 45, restStr: "45s", tempo: [2, 0, 1, 1], notes: "Knee supported DB external rotation.", advanced: "10% bodyweight.", regression: "Use a light resistance band." }
-        ],
-        "Workout 3: Deep Range": [
-          { name: "Cossack Squats", sets: 3, reps: "8 / side", rest: 90, restStr: "90s", tempo: [3, 0, 1, 0], notes: "Wide stance, squat down one leg, keep other straight.", advanced: "Hold a 45lb KB goblet style.", regression: "Hold onto a rack/TRX for support." },
-          { name: "Elephant Walks", sets: 3, reps: "15 / leg", rest: 60, restStr: "60s", tempo: [2, 0, 1, 1], notes: "Bend over, grab toes. Alternate straightening legs.", advanced: "Palms flat on the floor.", regression: "Place hands on a yoga block or bench." },
-          { name: "Seated Good Mornings", sets: 3, reps: "10", rest: 60, restStr: "60-90s", tempo: [3, 0, 1, 1], notes: "Wide straddle on bench, arch back, hinge forward.", advanced: "Use a barbell across back.", regression: "Bodyweight only, place hands on floor for support." },
-          { name: "DB Pullovers", sets: 3, reps: "12", rest: 60, restStr: "60s", tempo: [3, 1, 1, 0], notes: "Lie across bench, lower DB behind head.", advanced: "Massive stretch, heavy DB.", regression: "Lighter DB, don't drop as far back." }
-        ],
-        "Workout 4: Bulletproof Joints": [
-          { name: "Nordic Hamstring Eccentrics", sets: 4, reps: "5", rest: 120, restStr: "2 mins", tempo: [5, 0, 1, 0], notes: "Lower as slow as possible before catching yourself.", advanced: "Full unassisted rep.", regression: "Use a heavy band attached to a rack to pull you back up." },
-          { name: "Reverse Nordics", sets: 4, reps: "8", rest: 90, restStr: "90s", tempo: [3, 0, 1, 0], notes: "Kneel, lean back into deep quad stretch.", advanced: "Hold a plate to your chest.", regression: "Use a band attached in front of you for assistance." },
-          { name: "Garhammer Raises", sets: 3, reps: "15", rest: 60, restStr: "60s", tempo: [1, 0, 1, 2], notes: "Hang from bar, bring knees from parallel to chest.", advanced: "Add ankle weights.", regression: "Lying on floor, reverse crunches." },
-          { name: "QL Extensions", sets: 3, reps: "10 / side", rest: 60, restStr: "60s", tempo: [2, 0, 1, 1], notes: "Side bend on a 45-degree back extension machine.", advanced: "Hold a plate or DB.", regression: "Side plank hip dips on the floor." }
-        ],
-        "Workout 5: Full Integration": [
-          { name: "Patrick Step-Ups", sets: 3, reps: "15 / leg", rest: 60, restStr: "60s", tempo: [2, 0, 1, 0], notes: "Flat ground, push knee forward and touch heel.", advanced: "Hold DBs.", regression: "Hold a wall for balance." },
-          { name: "L-Sit Holds", type: "static", sets: 3, reps: "15s", holdTime: 15, rest: 60, restStr: "60s", notes: "Support on parallettes or floor, lift legs straight out.", advanced: "Hold for 30+ seconds.", regression: "Tuck knees into chest instead of straight legs." },
-          { name: "Slant Board Squats", sets: 3, reps: "15", rest: 90, restStr: "90s", tempo: [2, 0, 1, 0], notes: "Heels highly elevated, deep VMO squat.", advanced: "Hold heavy kettlebell.", regression: "Bodyweight, hold onto a rack." },
-          { name: "Seated Pancake", type: "static", sets: 1, reps: "3 mins", holdTime: 180, rest: 60, restStr: "60s trans.", notes: "Legs wide, chest to floor.", advanced: "Hold a light weight to pull you deeper.", regression: "Sit on a block to elevate hips." }
+        "Workout 1: Bulletproof": [
+          { "name": "ATG Split Squats", "sets": 4, "reps": "5 / leg", "rest": 90, "tempo": [3, 0, 1, 0], "notes": "Max knee travel.", "regression": "Elevate front foot." }
         ]
       }
     };
 
+    let workoutData = JSON.parse(JSON.stringify(defaultWorkoutData));
+
     const explicitMuscleMap = {
-      "Banded Glute Bridges": ["Glutes"], "Res Band Hip Flexor Marches": ["Hip Flexors", "Core"], "20lb KB Goblet Squats": ["Quads", "Glutes"],
-      "Copenhagen Adductor Planks": ["Adductors", "Core"], "45lb KB RDLs": ["Hamstrings", "Glutes", "Lower Back"], "Terminal Knee Extensions (TKEs)": ["Quads"],
-      "Pull-up Negatives": ["Upper Back / Lats", "Core"], "Banded Hamstring Curls": ["Hamstrings"], "45lb KB Hip Thrusts": ["Glutes"],
-      "Slider Lateral Lunges": ["Adductors", "Quads", "Glutes"], "Bodyweight Bulgarian Split Squats": ["Quads", "Glutes"],
-      "Seated Good Mornings (Empty Bar)": ["Lower Back", "Hamstrings"], "20lb KB Single-Leg Deadlifts": ["Hamstrings", "Glutes", "Lower Back"],
-      "Roman Chair Back Extensions": ["Lower Back", "Glutes"], "45lb KB Suitcase Carries": ["Core", "Upper Back / Lats"],
-      "Assisted Reverse Nordic Curls": ["Quads", "Hip Flexors"], "Barbell Hip Thrusts": ["Glutes"], "Weighted Knee Raises": ["Core", "Hip Flexors"],
-      "Barbell Back Squats": ["Quads", "Glutes", "Lower Back"], "Barbell RDLs": ["Hamstrings", "Glutes", "Lower Back"], "Weighted Step-Ups": ["Quads", "Glutes"],
-      "Pull-ups (Standard)": ["Upper Back / Lats", "Core"], "Nordic Hamstring Eccentrics": ["Hamstrings"], "Heavy Goblet Squats": ["Quads", "Glutes"],
-      "Barbell Bulgarian Split Squats": ["Quads", "Glutes"], "Seated Barbell Good Mornings": ["Lower Back", "Hamstrings"], "Barbell Stiff-Leg Deadlifts": ["Hamstrings", "Glutes", "Lower Back"],
-      "Weighted Back Extensions": ["Lower Back", "Glutes"], "Heavy Farmer's Carry": ["Core", "Upper Back / Lats"], "Unassisted Reverse Nordics": ["Quads", "Hip Flexors"],
-      "Deficit Reverse Lunges": ["Quads", "Glutes"], "Banded Psoas Holds": ["Hip Flexors", "Core"], "ATG Goblet Squats": ["Quads", "Glutes"],
-      "Single-Leg Glute Bridges": ["Glutes"], "Deficit Barbell RDLs": ["Hamstrings", "Glutes", "Lower Back"], "Poliquin Step-Ups": ["Quads"],
-      "Wide-Grip Pull-ups": ["Upper Back / Lats"], "Slider Hamstring Curls": ["Hamstrings"], "Single-Leg Hip Thrusts": ["Glutes"],
-      "Front-Foot Elevated Split Squats": ["Quads", "Glutes", "Hip Flexors"], "Jefferson Curls": ["Lower Back", "Hamstrings"],
-      "B-Stance Barbell RDLs": ["Hamstrings", "Glutes", "Lower Back"], "Superman Holds": ["Lower Back", "Glutes"], "Overhead KB Carry": ["Core", "Upper Back / Lats"],
-      "Deep Reverse Nordics": ["Quads", "Hip Flexors"], "Heavy Barbell Squats": ["Quads", "Glutes", "Lower Back"], "Hanging Leg Raises": ["Core", "Hip Flexors"],
-      "Middle Split Isometrics": ["Adductors"], "Heavy Roman Chair Glute Ext": ["Glutes", "Lower Back"], "Heavy Barbell RDLs": ["Hamstrings", "Glutes", "Lower Back"],
-      "Front Squats (Barbell)": ["Quads", "Core"], "Weighted Pull-ups": ["Upper Back / Lats", "Core"], "Nordic Hamstring Curls": ["Hamstrings"],
-      "Heavy Barbell Hip Thrusts": ["Glutes"], "Heavy Slider Lateral Lunges": ["Adductors", "Quads", "Glutes"], "Heavy DB Bulgarian Split Squats": ["Quads", "Glutes"],
-      "Front Split Isometrics": ["Hamstrings", "Hip Flexors"], "Heavy Single-Leg KB DL": ["Hamstrings", "Glutes", "Lower Back"],
-      "Heavy Roman Chair Back Ext": ["Lower Back", "Glutes"], "Zercher Carries": ["Core", "Quads"], "Advanced Reverse Nordics": ["Quads", "Hip Flexors"],
-      "Cat-Cow Flow": ["Lower Back"], "Bird Dog": ["Core", "Glutes"], "Pigeon Pose": ["Glutes"], "Child's Pose w/ Lat Stretch": ["Upper Back / Lats", "Lower Back"],
-      "90/90 Hip Transfers": ["Glutes", "Hip Flexors"], "Thoracic Rotations": ["Upper Back / Lats", "Core"], "Deep Pancake Stretch": ["Adductors", "Hamstrings"],
-      "Active Couch Stretch": ["Quads", "Hip Flexors"], "World's Greatest Stretch": ["Hip Flexors", "Upper Back / Lats"], "Ankle Dorsiflexion Rocks": ["Calves / Tibialis"],
-      "Supine Figure 4": ["Glutes"], "Seated IT Band Twist": ["Glutes", "Lower Back"], "ATG Split Squats": ["Quads", "Glutes", "Hip Flexors"],
-      "KOT Calf Raises": ["Calves / Tibialis"], "Tibialis Raises": ["Calves / Tibialis"], "Powell Raises": ["Upper Back / Lats"], "Trap-3 Raises": ["Upper Back / Lats"],
-      "Slant Board Jefferson Curls": ["Hamstrings", "Lower Back"], "External Rotations": ["Upper Back / Lats"], "Cossack Squats": ["Quads", "Adductors"],
-      "Elephant Walks": ["Hamstrings", "Calves / Tibialis"], "DB Pullovers": ["Upper Back / Lats", "Core"], "Garhammer Raises": ["Core", "Hip Flexors"],
-      "QL Extensions": ["Core", "Lower Back"], "Patrick Step-Ups": ["Quads"], "L-Sit Holds": ["Core", "Hip Flexors"], "Slant Board Squats": ["Quads"],
-      "Seated Pancake": ["Adductors", "Hamstrings"]
+      "Goblet Squats": ["Quads", "Glutes"],
+      "Banded Glute Bridges": ["Glutes"],
+      "Pull-up Negatives": ["Upper Back / Lats", "Core"],
+      "Push-ups": ["Chest", "Triceps", "Core"],
+      "ATG Split Squats": ["Quads", "Glutes", "Hip Flexors"]
     };
 
     function getMuscleGroups(exerciseName) { return explicitMuscleMap[exerciseName] || ["Other"]; }
 
     let activeCategory = "Main Plan";
     let activePhaseId = "p1";
-    let activeSubDay = "Day 1: Hips & Glutes";
+    let activeSubDay = "";
     let activeFilter = "dynamic"; 
     
-    // Default User Settings & Data
-    let userSettings = { name: '', startDate: '', theme: 'dark', defaultTimer: 60, timerSound: true, reducedMotion: false };
+    let userSettings = { 
+        name: '', startDate: '', theme: 'dark', defaultTimer: 60, timerSound: true, reducedMotion: false,
+        contractDays: '3', contractTime: '45', loadout: [], goal: 'mobility', experience: 'intermediate', additionalContext: '',
+        apiKey: ''
+    };
     let completedSets = {};
     let rpeData = {};
 
@@ -541,25 +611,17 @@
     
     let currentAutoExercise = null;
     let preferredVoice = null;
+    let aiProgressInterval = null;
 
     function loadVoices() {
       const voices = window.speechSynthesis.getVoices();
       if (!voices.length) return;
-
-      const preferredNames = [
-        'Google US English', 'Google UK English Male', 'Google UK English Female',
-        'Microsoft Guy Online (Natural)', 'Microsoft Aria Online (Natural)',
-        'Samantha', 'Daniel', 'Alex', 'Fiona', 'Victoria', 'Karen', 'Moira'
-      ];
-
+      const preferredNames = ['Google US English', 'Google UK English Male', 'Google UK English Female', 'Microsoft Guy Online (Natural)', 'Microsoft Aria Online (Natural)', 'Samantha', 'Daniel', 'Alex', 'Fiona', 'Victoria', 'Karen', 'Moira'];
       for (let name of preferredNames) {
         preferredVoice = voices.find(v => v.name.includes(name));
         if (preferredVoice) break;
       }
-
-      if (!preferredVoice) {
-        preferredVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
-      }
+      if (!preferredVoice) preferredVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
     }
 
     if (speechSynthesis.onvoiceschanged !== undefined) {
@@ -578,110 +640,378 @@
     function init() {
       loadVoices();
       try {
+        const savedPlan = localStorage.getItem('10WeekCustomPlan');
+        if (savedPlan) {
+            workoutData["Main Plan"] = JSON.parse(savedPlan);
+        }
+          
         const savedSets = localStorage.getItem('10WeekTrackerData');
         if (savedSets) completedSets = JSON.parse(savedSets);
-        
         const savedRPE = localStorage.getItem('10WeekRPEData');
         if (savedRPE) rpeData = JSON.parse(savedRPE);
-
         const savedSettings = localStorage.getItem('10WeekSettings');
-        if (savedSettings) userSettings = { ...userSettings, ...JSON.parse(savedSettings) };
+        if (savedSettings) {
+            userSettings = { ...userSettings, ...JSON.parse(savedSettings) };
+        }
       } catch (e) { }
 
       applySettings();
 
       const phaseSelector = document.getElementById('phase-selector');
-      phases.forEach(p => {
-        const option = document.createElement('option');
-        option.value = p.id;
-        option.textContent = p.name;
-        phaseSelector.appendChild(option);
-      });
-
-      phaseSelector.addEventListener('change', (e) => {
-        activePhaseId = e.target.value;
-        document.getElementById('phase-description').textContent = phases.find(p => p.id === activePhaseId).desc;
-        stopTempo();
-        renderApp();
-      });
-      document.getElementById('phase-description').textContent = phases[0].desc;
+      if(phaseSelector) {
+          phases.forEach(p => {
+            const option = document.createElement('option');
+            option.value = p.id;
+            option.textContent = p.name;
+            phaseSelector.appendChild(option);
+          });
+          phaseSelector.value = activePhaseId;
+          phaseSelector.addEventListener('change', (e) => {
+            activePhaseId = e.target.value;
+            stopTempo();
+            renderApp();
+          });
+      }
 
       renderCategories();
       renderApp();
+      switchMasterView('protocol'); 
     }
 
-    // --- Settings Modal Logic ---
+    function switchMasterView(viewId) {
+      const protocolEl = document.getElementById('view-protocol');
+      const skillEl = document.getElementById('view-skilltree');
+      const ghostEl = document.getElementById('view-ghost');
+      
+      if(protocolEl) protocolEl.classList.add('hidden');
+      if(skillEl) skillEl.classList.add('hidden');
+      if(ghostEl) ghostEl.classList.add('hidden');
+      
+      const inact = "flex-1 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all text-[#a09b8c] hover:text-[#f0e6d2] hover:bg-[#1e2328]";
+      const tabProto = document.getElementById('tab-protocol');
+      const tabSkill = document.getElementById('tab-skilltree');
+      const tabGhost = document.getElementById('tab-ghost');
+      if(tabProto) tabProto.className = inact;
+      if(tabSkill) tabSkill.className = inact;
+      if(tabGhost) tabGhost.className = inact;
+      
+      const viewToOpen = document.getElementById(`view-${viewId}`);
+      if(viewToOpen) viewToOpen.classList.remove('hidden');
+      
+      const act = "flex-1 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all bg-[#0ac8b9]/10 text-[#0ac8b9] border border-[#0ac8b9] hex-glow-cyan";
+      const targetTab = document.getElementById(`tab-${viewId}`);
+      if(targetTab) targetTab.className = act;
+      
+      if(viewId === 'skilltree') updateSkillTree();
+      if(viewId === 'ghost') updateGhostMode();
+    }
+
     function openSettings() {
-      document.getElementById('settings-modal').classList.remove('hidden');
-      document.getElementById('setting-name').value = userSettings.name;
-      document.getElementById('setting-date').value = userSettings.startDate;
-      document.getElementById('setting-theme').value = userSettings.theme;
-      document.getElementById('setting-timer').value = userSettings.defaultTimer;
-      document.getElementById('setting-sound').checked = userSettings.timerSound;
-      document.getElementById('setting-motion').checked = userSettings.reducedMotion;
+      const modal = document.getElementById('settings-modal');
+      if(modal) modal.classList.remove('hidden');
+      
+      const elName = document.getElementById('setting-name');
+      const elDate = document.getElementById('setting-date');
+      const elTheme = document.getElementById('setting-theme');
+      const elTimer = document.getElementById('setting-timer');
+      const elSound = document.getElementById('setting-sound');
+      const elMotion = document.getElementById('setting-motion');
+      
+      if(elName) elName.value = userSettings.name || '';
+      if(elDate) elDate.value = userSettings.startDate || '';
+      if(elTheme) elTheme.value = userSettings.theme || 'dark';
+      if(elTimer) elTimer.value = userSettings.defaultTimer || 60;
+      if(elSound) elSound.checked = userSettings.timerSound !== false;
+      if(elMotion) elMotion.checked = userSettings.reducedMotion === true;
+      
+      const elDays = document.getElementById('setting-contract-days');
+      const elTime = document.getElementById('setting-contract-time');
+      const elGoal = document.getElementById('setting-ai-goal');
+      const elExp = document.getElementById('setting-ai-exp');
+      const elContext = document.getElementById('setting-ai-context');
+      const elApiKey = document.getElementById('setting-api-key');
+
+      if(elDays) elDays.value = userSettings.contractDays || '3';
+      if(elTime) elTime.value = userSettings.contractTime || '45';
+      if(elGoal) elGoal.value = userSettings.goal || 'mobility';
+      if(elExp) elExp.value = userSettings.experience || 'intermediate';
+      if(elContext) elContext.value = userSettings.additionalContext || '';
+      if(elApiKey) elApiKey.value = userSettings.apiKey || '';
+      
+      const loadout = userSettings.loadout || [];
+      const checks = ['dumbbells', 'kettlebells', 'barbell', 'pullup', 'bench', 'bands', 'sliders'];
+      checks.forEach(item => {
+          const cb = document.getElementById(`eq-${item}`);
+          if(cb) cb.checked = loadout.includes(item);
+      });
     }
 
     function closeSettings() {
-      document.getElementById('settings-modal').classList.add('hidden');
+      const modal = document.getElementById('settings-modal');
+      if(modal) modal.classList.add('hidden');
     }
 
     function saveSettings() {
-      userSettings.name = document.getElementById('setting-name').value;
-      userSettings.startDate = document.getElementById('setting-date').value;
-      userSettings.theme = document.getElementById('setting-theme').value;
-      userSettings.defaultTimer = document.getElementById('setting-timer').value;
-      userSettings.timerSound = document.getElementById('setting-sound').checked;
-      userSettings.reducedMotion = document.getElementById('setting-motion').checked;
+      const elName = document.getElementById('setting-name');
+      const elDate = document.getElementById('setting-date');
+      const elTheme = document.getElementById('setting-theme');
+      const elTimer = document.getElementById('setting-timer');
+      const elSound = document.getElementById('setting-sound');
+      const elMotion = document.getElementById('setting-motion');
+      const elDays = document.getElementById('setting-contract-days');
+      const elTime = document.getElementById('setting-contract-time');
+      const elGoal = document.getElementById('setting-ai-goal');
+      const elExp = document.getElementById('setting-ai-exp');
+      const elContext = document.getElementById('setting-ai-context');
+      const elApiKey = document.getElementById('setting-api-key');
+
+      if(elName) userSettings.name = elName.value;
+      if(elDate) userSettings.startDate = elDate.value;
+      if(elTheme) userSettings.theme = elTheme.value;
+      if(elTimer) userSettings.defaultTimer = elTimer.value;
+      if(elSound) userSettings.timerSound = elSound.checked;
+      if(elMotion) userSettings.reducedMotion = elMotion.checked;
+      if(elDays) userSettings.contractDays = elDays.value;
+      if(elTime) userSettings.contractTime = elTime.value;
+      if(elGoal) userSettings.goal = elGoal.value;
+      if(elExp) userSettings.experience = elExp.value;
+      if(elContext) userSettings.additionalContext = elContext.value;
+      
+      if(elApiKey) userSettings.apiKey = elApiKey.value.trim();
+      
+      let loadout = [];
+      const checks = ['dumbbells', 'kettlebells', 'barbell', 'pullup', 'bench', 'bands', 'sliders'];
+      checks.forEach(item => {
+          const cb = document.getElementById(`eq-${item}`);
+          if(cb && cb.checked) loadout.push(item);
+      });
+      userSettings.loadout = loadout;
 
       try { localStorage.setItem('10WeekSettings', JSON.stringify(userSettings)); } catch(e) {}
       applySettings();
       closeSettings();
     }
 
-    function applySettings() {
-      const titleEl = document.getElementById('main-title');
-      titleEl.textContent = userSettings.name ? `${userSettings.name}'s 10-Week Protocol` : "10-Week Protocol";
-
-      if (userSettings.reducedMotion) { document.documentElement.classList.add('reduced-motion'); } 
-      else { document.documentElement.classList.remove('reduced-motion'); }
+    function revertToDefaultPlan() {
+        if(confirm("Wipe AI Custom plan and revert to default template?")) {
+            localStorage.removeItem('10WeekCustomPlan');
+            workoutData["Main Plan"] = JSON.parse(JSON.stringify(defaultWorkoutData["Main Plan"]));
+            activeSubDay = "";
+            renderApp();
+            closeSettings();
+        }
     }
 
-    function eraseAllProgress() {
-      if(confirm("Are you absolutely sure you want to erase ALL progress? This cannot be undone unless you have a backup.")) {
-        completedSets = {};
-        rpeData = {};
-        localStorage.removeItem('10WeekTrackerData');
-        localStorage.removeItem('10WeekRPEData');
-        renderApp();
-        closeSettings();
+    async function requestAIPlan() {
+      saveSettings();
+      
+      const apiKey = userSettings.apiKey ? userSettings.apiKey.trim() : '';
+      
+      if (!apiKey) {
+          alert("Awaiting Key: Please enter your Google Gemini API key into the Settings node.");
+          return;
+      }
+
+      // Setup and Show the Loading Modal
+      const modal = document.getElementById('ai-loading-modal');
+      if(modal) modal.classList.remove('hidden');
+      
+      const spinner = document.getElementById('ai-spinner');
+      const successIcon = document.getElementById('ai-success-icon');
+      const errorIcon = document.getElementById('ai-error-icon');
+      if(spinner) spinner.classList.remove('hidden');
+      if(successIcon) successIcon.classList.add('hidden');
+      if(errorIcon) errorIcon.classList.add('hidden');
+      
+      const title = document.getElementById('ai-loading-title');
+      if(title) {
+          title.textContent = "Generating Custom Protocol";
+          title.className = "text-xl font-black uppercase text-[#0ac8b9] tracking-widest mb-2 hex-text-glow";
+      }
+      
+      const desc = document.getElementById('ai-loading-desc');
+      if(desc) {
+          desc.textContent = "Uplinking to Gemini Core... Stand by.";
+          desc.className = "text-[10px] text-[#a09b8c] uppercase tracking-widest font-bold mb-6";
+      }
+      
+      const bar = document.getElementById('ai-loading-bar');
+      if(bar) {
+          bar.className = "h-full bg-[#0ac8b9] w-0 hex-glow-cyan transition-all duration-300";
+          bar.style.width = "0%";
+      }
+      
+      const closeBtn = document.getElementById('ai-close-btn');
+      if(closeBtn) {
+          closeBtn.classList.add('hidden');
+          closeBtn.onclick = finishAISequence;
+          closeBtn.textContent = "Initialize Routine";
+          closeBtn.className = "hidden px-8 py-3 bg-[#0ac8b9]/10 border border-[#0ac8b9] hover:bg-[#0ac8b9] text-xs font-black uppercase tracking-widest text-[#0ac8b9] hover:text-[#010a13] transition-all hex-glow-cyan mt-2";
+      }
+
+      // Start Fake Progress Bar Animation
+      let progress = 0;
+      clearInterval(aiProgressInterval);
+      aiProgressInterval = setInterval(() => {
+         if(progress < 85 && bar) {
+             progress += Math.random() * 10;
+             bar.style.width = `${Math.min(progress, 85)}%`;
+         }
+      }, 400);
+
+      const daysCount = parseInt(userSettings.contractDays) || 3;
+      const loadoutStr = (userSettings.loadout && userSettings.loadout.length > 0) ? userSettings.loadout.join(', ') : 'Bodyweight only';
+      const promptText = `
+You are an elite, highly technical AI fitness coach. Build a custom 10-week workout program for a user based ONLY on their specific parameters.
+
+USER PROFILE:
+- Primary Goal: ${userSettings.goal}
+- Experience Level: ${userSettings.experience}
+- Schedule: Exactly ${daysCount} days per week.
+- Daily Time Limit: ${userSettings.contractTime} minutes per workout.
+- Equipment Available: ${loadoutStr}
+- Custom User Requests, Injuries, & Context: ${userSettings.additionalContext || 'None provided'}
+
+INSTRUCTIONS:
+1. You MUST output ONLY raw, valid JSON. No markdown formatting, no code blocks (do not use \`\`\`json), no introductory text.
+2. The JSON structure MUST match this exact schema:
+{
+  "p1": { "Day 1: [Name]": [ { "name": "Exercise Name", "sets": 3, "reps": "10", "rest": 60, "tempo": [3,0,1,0], "notes": "Directive note.", "regression": "Easier option" } ], "Day 2: ...": [...] },
+  "p2": { "Day 1: [Name]": [ { "name": "Exercise Name", "sets": 3, "reps": "10", "rest": 60 } ] },
+  "p3": { "Day 1: [Name]": [ { "name": "Exercise Name", "sets": 3, "reps": "10", "rest": 60 } ] },
+  "p4": { "Day 1: [Name]": [ { "name": "Exercise Name", "sets": 3, "reps": "10", "rest": 60 } ] }
+}
+3. There MUST be exactly 4 keys: "p1", "p2", "p3", "p4" representing the 4 phases.
+4. Inside EACH phase, there MUST be EXACTLY ${daysCount} keys for the days (e.g. "Day 1: Base", "Day 2: Core", etc).
+5. CRITICAL: You MUST deeply customize the exercises, volume, and notes based on the user's "Custom User Requests, Injuries, & Context".
+`;
+
+      try {
+          const encodedKey = encodeURIComponent(apiKey);
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodedKey}`;
+
+          const response = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  contents: [{ parts: [{ text: promptText }] }],
+                  generationConfig: { temperature: 0.2 } 
+              })
+          });
+
+          if(!response.ok) {
+              const errData = await response.json();
+              throw new Error(errData.error?.message || `HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+          if(!data.candidates || data.candidates.length === 0) {
+              throw new Error("AI returned an empty response.");
+          }
+
+          let rawJsonStr = data.candidates[0].content.parts[0].text;
+          
+          rawJsonStr = rawJsonStr.replace(/```json/gi, '').replace(/
+```/g, '').trim();
+          const newPlan = JSON.parse(rawJsonStr);
+
+          if(!newPlan.p1 || !newPlan.p2 || !newPlan.p3 || !newPlan.p4) {
+              throw new Error("AI failed to match the JSON schema.");
+          }
+
+          workoutData["Main Plan"] = newPlan;
+          localStorage.setItem('10WeekCustomPlan', JSON.stringify(newPlan));
+          
+          clearInterval(aiProgressInterval);
+          if(bar) {
+              bar.style.width = "100%";
+              bar.className = "h-full bg-green-500 w-full hex-glow-green transition-all duration-300";
+          }
+
+          if(spinner) spinner.classList.add('hidden');
+          if(successIcon) successIcon.classList.remove('hidden');
+
+          if(title) {
+              title.textContent = "Protocol Secured";
+              title.className = "text-xl font-black uppercase text-green-500 tracking-widest mb-2 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]";
+          }
+          if(desc) desc.textContent = "10-Week Routine Ready for Initialization.";
+          
+          if(closeBtn) {
+              closeBtn.classList.remove('hidden');
+              closeBtn.classList.add('inline-flex');
+          }
+
+      } catch (err) {
+          console.error(err);
+          clearInterval(aiProgressInterval);
+          if(bar) bar.className = "h-full bg-[#e84057] transition-all duration-300 shadow-[0_0_10px_rgba(232,64,87,0.6)]";
+          
+          if(spinner) spinner.classList.add('hidden');
+          if(errorIcon) errorIcon.classList.remove('hidden');
+
+          if(title) {
+              title.textContent = "Uplink Failed";
+              title.className = "text-xl font-black uppercase text-[#e84057] tracking-widest mb-2 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]";
+          }
+          
+          if(desc) {
+              desc.textContent = `Error: ${err.message}`;
+              desc.className = "text-[10px] text-[#e84057] uppercase tracking-widest font-bold mb-6 px-4";
+          }
+          
+          if(closeBtn) {
+              closeBtn.textContent = "Abort";
+              closeBtn.onclick = () => {
+                  const m = document.getElementById('ai-loading-modal');
+                  if(m) m.classList.add('hidden');
+              };
+              closeBtn.className = "inline-flex px-8 py-3 bg-[#e84057]/10 border border-[#e84057] hover:bg-[#e84057] text-xs font-black uppercase tracking-widest text-[#e84057] hover:text-[#010a13] transition-all mt-2 shadow-[0_0_10px_rgba(232,64,87,0.3)]";
+              closeBtn.classList.remove('hidden');
+          }
       }
     }
 
-    function handleRPE(exerciseName, val) {
-      const key = getBaseKey(exerciseName);
-      rpeData[key] = val;
-      try { localStorage.setItem('10WeekRPEData', JSON.stringify(rpeData)); } catch(e){}
+    function finishAISequence() {
+        const modal = document.getElementById('ai-loading-modal');
+        if(modal) modal.classList.add('hidden');
+        activeSubDay = ""; 
+        renderApp();
     }
-    // -----------------------------
+
+    function applySettings() {
+      const titleEl = document.getElementById('main-title');
+      if(titleEl) titleEl.textContent = userSettings.name ? `${userSettings.name}'s 10-Week Protocol` : "10-Week Protocol";
+      if (userSettings.reducedMotion) { document.documentElement.classList.add('reduced-motion'); } 
+      else { document.documentElement.classList.remove('reduced-motion'); }
+      
+      const days = userSettings.contractDays || '?';
+      const time = userSettings.contractTime || '?';
+      const contractEl = document.getElementById('contract-hud');
+      if(contractEl) contractEl.innerHTML = `<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> CONTRACT: ${days} DAYS | ${time} MINS`;
+      
+      const loadoutText = (userSettings.loadout && userSettings.loadout.length > 0) ? userSettings.loadout.join(', ') : 'STANDARD';
+      const equipEl = document.getElementById('equipment-hud');
+      if(equipEl) equipEl.textContent = `LOADOUT: ${loadoutText}`;
+    }
 
     function renderCategories() {
       const catContainer = document.getElementById('category-tabs');
+      if(!catContainer) return;
       catContainer.innerHTML = '';
       categoriesList.forEach(cat => {
         const btn = document.createElement('button');
         btn.onclick = () => {
           activeCategory = cat;
           const dataNode = activeCategory === "Main Plan" ? workoutData["Main Plan"][activePhaseId] : workoutData[activeCategory];
-          activeSubDay = Object.keys(dataNode)[0];
+          activeSubDay = Object.keys(dataNode)[0] || "";
           activeFilter = 'dynamic';
           stopTempo();
           renderCategories();
           renderApp();
         };
         btn.className = `px-5 py-2 text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all ${
-          activeCategory === cat 
-            ? 'tab-active' 
-            : 'tab-inactive'
+          activeCategory === cat ? 'tab-active' : 'tab-inactive'
         }`;
         btn.textContent = cat;
         catContainer.appendChild(btn);
@@ -691,9 +1021,7 @@
     function updatePhaseProgress() {
       const phaseId = activePhaseId; 
       const phaseData = workoutData["Main Plan"][phaseId];
-      
-      let totalPhaseSets = 0;
-      let completedPhaseSets = 0;
+      let totalPhaseSets = 0; let completedPhaseSets = 0;
 
       if (phaseData && activeCategory === "Main Plan") {
         for (const [dayName, exercises] of Object.entries(phaseData)) {
@@ -701,63 +1029,62 @@
             totalPhaseSets += ex.sets;
             for (let i = 0; i < ex.sets; i++) {
               const key = `Main Plan-${phaseId}-${dayName}-${ex.name}-${i}`;
-              if (completedSets[key]) {
-                completedPhaseSets++;
-              }
+              if (completedSets[key]) completedPhaseSets++;
             }
           });
         }
       }
 
       const percent = totalPhaseSets === 0 ? 0 : Math.round((completedPhaseSets / totalPhaseSets) * 100);
-      
       const phaseObj = phases.find(p => p.id === phaseId);
       const phaseNameShort = phaseObj ? phaseObj.name.split(':')[0] : 'Phase';
       
-      document.getElementById('phase-progress-title').textContent = `${phaseNameShort} OVERVIEW`;
-      document.getElementById('phase-progress-text').textContent = `${completedPhaseSets} of ${totalPhaseSets} sets resolved`;
-      document.getElementById('phase-progress-percent').textContent = `${percent}%`;
+      const titleEl = document.getElementById('phase-progress-title');
+      if(titleEl) titleEl.textContent = `${phaseNameShort} OVERVIEW`;
+      
+      const textEl = document.getElementById('phase-progress-text');
+      if(textEl) textEl.textContent = `${completedPhaseSets} of ${totalPhaseSets} sets resolved`;
+      
+      const percEl = document.getElementById('phase-progress-percent');
+      if(percEl) percEl.textContent = `${percent}%`;
       
       const bar = document.getElementById('phase-progress-bar');
-      bar.style.width = `${percent}%`;
-      
-      if (percent === 100 && totalPhaseSets > 0) {
-        bar.classList.replace('bg-[#c89b3c]', 'bg-[#0ac8b9]');
-        bar.classList.replace('hex-glow-gold', 'hex-glow-cyan');
-        document.getElementById('phase-progress-percent').classList.replace('text-[#c89b3c]', 'text-[#0ac8b9]');
-      } else {
-        bar.classList.replace('bg-[#0ac8b9]', 'bg-[#c89b3c]');
-        bar.classList.replace('hex-glow-cyan', 'hex-glow-gold');
-        document.getElementById('phase-progress-percent').classList.replace('text-[#0ac8b9]', 'text-[#c89b3c]');
+      if(bar) {
+          bar.style.width = `${percent}%`;
+          if (percent === 100 && totalPhaseSets > 0) {
+            bar.classList.replace('bg-[#c89b3c]', 'bg-[#0ac8b9]');
+            bar.classList.replace('hex-glow-gold', 'hex-glow-cyan');
+            if(percEl) percEl.classList.replace('text-[#c89b3c]', 'text-[#0ac8b9]');
+          } else {
+            bar.classList.replace('bg-[#0ac8b9]', 'bg-[#c89b3c]');
+            bar.classList.replace('hex-glow-cyan', 'hex-glow-gold');
+            if(percEl) percEl.classList.replace('text-[#0ac8b9]', 'text-[#c89b3c]');
+          }
       }
     }
 
     function renderApp() {
       const dataNode = activeCategory === "Main Plan" ? workoutData["Main Plan"][activePhaseId] : workoutData[activeCategory];
+      if (!dataNode) return;
       const days = Object.keys(dataNode);
-      
-      if (!days.includes(activeSubDay)) activeSubDay = days[0];
+      if (!days.includes(activeSubDay) || activeSubDay === "") activeSubDay = days[0];
 
-      // Draw Horizontally Scrolling Day Tabs
       const dayContainer = document.getElementById('day-tabs');
-      dayContainer.innerHTML = '';
-      days.forEach(day => {
-        const btn = document.createElement('button');
-        btn.onclick = () => {
-          activeSubDay = day;
-          stopTempo();
-          renderApp();
-        };
-        btn.className = `shrink-0 px-4 py-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all snap-start ${
-          activeSubDay === day 
-            ? 'bg-[#c89b3c]/10 text-[#c89b3c] border border-[#c89b3c] hex-glow-gold' 
-            : 'bg-[#010a13] border border-[#1e2328] text-[#a09b8c] hover:border-[#4a545c] hover:text-[#f0e6d2]'
-        }`;
-        btn.textContent = day;
-        dayContainer.appendChild(btn);
-      });
+      if(dayContainer) {
+          dayContainer.innerHTML = '';
+          days.forEach(day => {
+            const btn = document.createElement('button');
+            btn.onclick = () => { activeSubDay = day; stopTempo(); renderApp(); };
+            btn.className = `shrink-0 px-4 py-2 text-[11px] font-black uppercase tracking-wider whitespace-nowrap transition-all snap-start ${
+              activeSubDay === day ? 'bg-[#c89b3c]/10 text-[#c89b3c] border border-[#c89b3c] hex-glow-gold' : 'bg-[#010a13] border border-[#1e2328] text-[#a09b8c] hover:border-[#4a545c] hover:text-[#f0e6d2]'
+            }`;
+            btn.textContent = day;
+            dayContainer.appendChild(btn);
+          });
+      }
 
-      document.getElementById('current-day-title').textContent = activeSubDay;
+      const currDayTitle = document.getElementById('current-day-title');
+      if(currDayTitle) currDayTitle.textContent = activeSubDay;
 
       const exercisesInDay = dataNode[activeSubDay] || [];
       const hasDynamic = exercisesInDay.some(ex => (ex.type || 'dynamic') === 'dynamic');
@@ -767,124 +1094,199 @@
       if (activeFilter === 'static' && !hasStatic && hasDynamic) activeFilter = 'dynamic';
 
       const typeContainer = document.getElementById('type-tabs');
-      typeContainer.innerHTML = '';
-      if (hasDynamic && hasStatic) {
-        ['dynamic', 'static'].forEach(t => {
-          const btn = document.createElement('button');
-          btn.onclick = () => { activeFilter = t; renderApp(); };
-          btn.className = `flex-1 py-2 text-[10px] uppercase tracking-widest font-black transition-all border ${
-            activeFilter === t 
-              ? 'bg-[#0ac8b9]/10 border-[#0ac8b9] text-[#0ac8b9] hex-glow-cyan' 
-              : 'bg-[#010a13] border-[#1e2328] text-[#a09b8c] hover:border-[#4a545c]'
-          }`;
-          btn.innerHTML = t === 'dynamic' ? 'DYNAMIC PROTOCOL' : 'STATIC RESTORATION';
-          typeContainer.appendChild(btn);
-        });
+      if(typeContainer) {
+          typeContainer.innerHTML = '';
+          if (hasDynamic && hasStatic) {
+            ['dynamic', 'static'].forEach(t => {
+              const btn = document.createElement('button');
+              btn.onclick = () => { activeFilter = t; renderApp(); };
+              btn.className = `flex-1 py-2 text-[10px] uppercase tracking-widest font-black transition-all border ${
+                activeFilter === t ? 'bg-[#0ac8b9]/10 border-[#0ac8b9] text-[#0ac8b9] hex-glow-cyan' : 'bg-[#010a13] border-[#1e2328] text-[#a09b8c] hover:border-[#4a545c]'
+              }`;
+              btn.innerHTML = t === 'dynamic' ? 'DYNAMIC PROTOCOL' : 'STATIC RESTORATION';
+              typeContainer.appendChild(btn);
+            });
+          }
       }
 
       const exercisesToRender = exercisesInDay.filter(ex => (ex.type || 'dynamic') === activeFilter);
       const exContainer = document.getElementById('exercise-list');
-      exContainer.innerHTML = '';
+      if(exContainer) {
+          exContainer.innerHTML = '';
 
-      exercisesToRender.forEach((ex, exIdx) => {
-        const div = document.createElement('div');
-        div.className = "hex-panel p-5 relative transition-colors";
-        
-        let checksHtml = '';
-        for (let i = 0; i < ex.sets; i++) {
-          const key = getTrackKey(ex.name, i);
-          const isChecked = completedSets[key];
-          
-          checksHtml += `
-            <button onclick="handleCheck('${ex.name.replace(/'/g, "\\'")}', ${i})" class="w-10 h-10 rounded-sm flex items-center justify-center transition-all transform active:scale-90 ${
-              isChecked 
-                ? 'bg-[#0ac8b9]/20 border border-[#0ac8b9] text-[#0ac8b9] hex-glow-cyan' 
-                : 'bg-[#010a13] border border-[#1e2328] text-[#1e2328] hover:border-[#4a545c]'
-            }">
-              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </button>
-          `;
-        }
-
-        const advancedHtml = ex.advanced 
-          ? `<div class="mt-4 border-l-2 border-[#c89b3c] pl-3 py-1">
-               <span class="text-[9px] text-[#c89b3c] font-black uppercase tracking-widest block mb-0.5">Elite Target</span>
-               <p class="text-xs text-[#f0e6d2] font-medium leading-relaxed">${ex.advanced}</p>
-             </div>` : '';
-             
-        const regressionHtml = ex.regression 
-          ? `<div class="mt-3 border-l-2 border-[#a09b8c] pl-3 py-1">
-               <span class="text-[9px] text-[#a09b8c] font-black uppercase tracking-widest block mb-0.5">Regression Protocol</span>
-               <p class="text-xs text-[#a09b8c] font-medium leading-relaxed">${ex.regression}</p>
-             </div>` : '';
-
-        const searchUrl = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(ex.name + ' exercise proper form')}`;
-        const safeId = ex.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
-
-        const repsMatch = ex.reps.match(/(\d+)/g);
-        const targetRepsForAudio = repsMatch ? Math.max(...repsMatch.map(Number)) : 15;
-
-        // RPE Loading
-        const baseKey = getBaseKey(ex.name);
-        const currentRPE = rpeData[baseKey] || 5;
-
-        div.innerHTML = `
-          <div class="flex flex-col md:flex-row justify-between gap-6">
+          exercisesToRender.forEach((ex, exIdx) => {
+            const div = document.createElement('div');
+            div.className = "hex-panel p-5 relative transition-colors";
             
-            <div class="flex-1">
-              <div class="flex items-start justify-between mb-3 gap-2">
-                <h3 class="text-lg font-black uppercase tracking-wider text-[#f0e6d2] leading-tight">${ex.name}</h3>
-                <a href="${searchUrl}" target="_blank" class="shrink-0 text-[10px] font-black uppercase tracking-widest text-[#0ac8b9] hover:text-[#f0e6d2] flex items-center justify-center gap-1 border-b border-transparent hover:border-[#0ac8b9] transition-colors pb-0.5">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> Intel
-                </a>
-              </div>
-              <div class="flex items-center gap-2 mb-4 flex-wrap">
-                <span class="inline-block px-2 py-1 bg-[#010a13] border border-[#c89b3c]/50 text-[#c89b3c] text-[10px] font-black uppercase tracking-widest rounded-sm">${ex.sets} Sets</span>
-                <span class="inline-block px-2 py-1 bg-[#010a13] border border-[#c89b3c]/50 text-[#c89b3c] text-[10px] font-black uppercase tracking-widest rounded-sm">${ex.reps}</span>
-                
-                ${ex.rest ? `
-                <button onclick="startExerciseTimer(${ex.rest}, '${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1.5 px-2 py-1 bg-[#c89b3c]/10 hover:bg-[#c89b3c]/20 text-[#c89b3c] border border-[#c89b3c] text-[10px] font-black uppercase tracking-widest rounded-sm transition-all hex-glow-gold" title="Start ${ex.rest}s Timer">
-                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  Rest: ${ex.restStr || ex.rest + 's'}
-                </button>` : ''}
+            let checksHtml = '';
+            for (let i = 0; i < (ex.sets || 1); i++) {
+              const key = getTrackKey(ex.name, i);
+              const isChecked = completedSets[key];
+              checksHtml += `
+                <button onclick="handleCheck('${ex.name.replace(/'/g, "\\'")}', ${i})" class="w-10 h-10 rounded-sm flex items-center justify-center transition-all transform active:scale-90 ${
+                  isChecked ? 'bg-[#0ac8b9]/20 border border-[#0ac8b9] text-[#0ac8b9] hex-glow-cyan' : 'bg-[#010a13] border border-[#1e2328] text-[#1e2328] hover:border-[#4a545c]'
+                }">
+                  <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
+              `;
+            }
 
-                ${ex.holdTime ? `
-                <button onclick="startExerciseTimer(${ex.holdTime}, '${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1.5 px-2 py-1 bg-[#a09b8c]/10 hover:bg-[#a09b8c]/20 text-[#f0e6d2] border border-[#a09b8c] text-[10px] font-black uppercase tracking-widest rounded-sm transition-all" title="Start ${ex.holdTime}s Hold Timer">
-                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  Hold: ${ex.holdTime}s
-                </button>` : ''}
+            const advancedHtml = ex.advanced ? `<div class="mt-4 border-l-2 border-[#c89b3c] pl-3 py-1"><span class="text-[9px] text-[#c89b3c] font-black uppercase tracking-widest block mb-0.5">Elite Target</span><p class="text-xs text-[#f0e6d2] font-medium leading-relaxed">${ex.advanced}</p></div>` : '';
+            const regressionHtml = ex.regression ? `<div class="mt-3 border-l-2 border-[#a09b8c] pl-3 py-1"><span class="text-[9px] text-[#a09b8c] font-black uppercase tracking-widest block mb-0.5">Regression Protocol</span><p class="text-xs text-[#a09b8c] font-medium leading-relaxed">${ex.regression}</p></div>` : '';
 
-                ${ex.tempo ? `
-                <button id="tempo-btn-${safeId}" data-orig-text="Tempo: ${ex.tempo.join('-')}" onclick="startTempoFromButton('${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1.5 px-2 py-1 bg-[#0ac8b9]/10 hover:bg-[#0ac8b9]/20 text-[#0ac8b9] border border-[#0ac8b9] text-[10px] font-black uppercase tracking-widest rounded-sm transition-all hex-glow-cyan">
-                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                  Tempo: ${ex.tempo.join('-')}
-                </button>` : ''}
-              </div>
-              <p class="text-xs text-[#a09b8c] font-medium leading-relaxed mb-2"><strong class="text-[#f0e6d2] font-black uppercase tracking-wide">Directive:</strong> ${ex.notes}</p>
-              ${advancedHtml}
-              ${regressionHtml}
+            const searchQuery = encodeURIComponent(ex.name + ' exercise proper form');
+            const searchUrl = `https://www.youtube.com/results?search_query=${searchQuery}`;
+            const safeId = ex.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
 
-              <!-- RPE Slider -->
-              <div class="mt-5 pt-3 border-t border-[#1e2328]">
-                <div class="flex justify-between items-center mb-1">
-                  <label class="text-[9px] font-black text-[#4a545c] uppercase tracking-[0.2em]">Exertion Output (RPE)</label>
-                  <span class="text-[10px] font-black text-[#0ac8b9] uppercase tracking-widest" id="rpe-val-${safeId}">LVL ${currentRPE}</span>
+            const currentRPE = rpeData[getBaseKey(ex.name)] || 5;
+            
+            const tRest = ex.rest || null;
+            const tHold = ex.holdTime || null;
+            const tTempo = (ex.tempo && Array.isArray(ex.tempo)) ? ex.tempo.join('-') : null;
+
+            div.innerHTML = `
+              <div class="flex flex-col md:flex-row justify-between gap-6">
+                <div class="flex-1">
+                  <div class="flex items-start justify-between mb-3 gap-2">
+                    <h3 class="text-lg font-black uppercase tracking-wider text-[#f0e6d2] leading-tight">${ex.name}</h3>
+                    <a href="${searchUrl}" target="_blank" class="shrink-0 text-[10px] font-black uppercase tracking-widest text-[#0ac8b9] hover:text-[#f0e6d2] flex items-center justify-center gap-1 border-b border-transparent hover:border-[#0ac8b9] transition-colors pb-0.5">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> Form
+                    </a>
+                  </div>
+                  <div class="flex items-center gap-2 mb-4 flex-wrap">
+                    <span class="inline-block px-2 py-1 bg-[#010a13] border border-[#c89b3c]/50 text-[#c89b3c] text-[10px] font-black uppercase tracking-widest rounded-sm">${ex.sets || 1} Sets</span>
+                    <span class="inline-block px-2 py-1 bg-[#010a13] border border-[#c89b3c]/50 text-[#c89b3c] text-[10px] font-black uppercase tracking-widest rounded-sm">${ex.reps || 'N/A'}</span>
+                    
+                    ${tRest ? `
+                    <button onclick="startExerciseTimer(${tRest}, '${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1.5 px-2 py-1 bg-[#c89b3c]/10 hover:bg-[#c89b3c]/20 text-[#c89b3c] border border-[#c89b3c] text-[10px] font-black uppercase tracking-widest rounded-sm transition-all hex-glow-gold">
+                      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Rest: ${ex.restStr || tRest + 's'}
+                    </button>` : ''}
+
+                    ${tHold ? `
+                    <button onclick="startExerciseTimer(${tHold}, '${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1.5 px-2 py-1 bg-[#a09b8c]/10 hover:bg-[#a09b8c]/20 text-[#f0e6d2] border border-[#a09b8c] text-[10px] font-black uppercase tracking-widest rounded-sm transition-all">
+                      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Hold: ${tHold}s
+                    </button>` : ''}
+
+                    ${tTempo ? `
+                    <button id="tempo-btn-${safeId}" data-orig-text="Tempo: ${tTempo}" onclick="startTempoFromButton('${ex.name.replace(/'/g, "\\'")}')" class="inline-flex items-center gap-1.5 px-2 py-1 bg-[#0ac8b9]/10 hover:bg-[#0ac8b9]/20 text-[#0ac8b9] border border-[#0ac8b9] text-[10px] font-black uppercase tracking-widest rounded-sm transition-all hex-glow-cyan">
+                      <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Tempo: ${tTempo}
+                    </button>` : ''}
+                  </div>
+                  <p class="text-xs text-[#a09b8c] font-medium leading-relaxed mb-2"><strong class="text-[#f0e6d2] font-black uppercase tracking-wide">Directive:</strong> ${ex.notes || 'No specific directive given.'}</p>
+                  ${advancedHtml}
+                  ${regressionHtml}
+
+                  <div class="mt-5 pt-3 border-t border-[#1e2328]">
+                    <div class="flex justify-between items-center mb-1">
+                      <label class="text-[9px] font-black text-[#4a545c] uppercase tracking-[0.2em]">Exertion Output (RPE)</label>
+                      <span class="text-[10px] font-black text-[#0ac8b9] uppercase tracking-widest" id="rpe-val-${safeId}">LVL ${currentRPE}</span>
+                    </div>
+                    <input type="range" min="1" max="10" value="${currentRPE}" onchange="handleRPE('${ex.name.replace(/'/g, "\\'")}', this.value)" oninput="document.getElementById('rpe-val-${safeId}').textContent = 'LVL ' + this.value" class="rpe-slider w-full h-1 bg-[#010a13] border border-[#1e2328] rounded-none appearance-none cursor-pointer">
+                  </div>
                 </div>
-                <input type="range" min="1" max="10" value="${currentRPE}" onchange="handleRPE('${ex.name.replace(/'/g, "\\'")}', this.value)" oninput="document.getElementById('rpe-val-${safeId}').textContent = 'LVL ' + this.value" class="rpe-slider w-full h-1 bg-[#010a13] border border-[#1e2328] rounded-none appearance-none cursor-pointer">
+
+                <div class="flex flex-row md:flex-col gap-2 items-center justify-center md:justify-start md:w-auto w-full border-t md:border-t-0 md:border-l border-[#1e2328] pt-4 md:pt-0 md:pl-5">
+                  <span class="text-[9px] text-[#4a545c] font-black uppercase tracking-[0.2em] mb-1 hidden md:block">Logs</span>
+                  <div class="flex gap-2">${checksHtml}</div>
+                </div>
               </div>
-
-            </div>
-
-            <div class="flex flex-row md:flex-col gap-2 items-center justify-center md:justify-start md:w-auto w-full border-t md:border-t-0 md:border-l border-[#1e2328] pt-4 md:pt-0 md:pl-5">
-              <span class="text-[9px] text-[#4a545c] font-black uppercase tracking-[0.2em] mb-1 hidden md:block">Logs</span>
-              <div class="flex gap-2">${checksHtml}</div>
-            </div>
-          </div>
-        `;
-        exContainer.appendChild(div);
-      });
+            `;
+            exContainer.appendChild(div);
+          });
+      }
 
       updateProgress(exercisesInDay); 
+    }
+
+    function getTrackerAnalytics() {
+      let strengthSets = 0; let mobilitySets = 0; let enduranceSets = 0; let totalSetsAllTime = 0;
+      for (const [key, isChecked] of Object.entries(completedSets)) {
+        if (!isChecked) continue;
+        totalSetsAllTime++;
+        enduranceSets++; 
+        const parts = key.split('-');
+        if(parts.length >= 4) {
+           const exName = parts[3];
+           const muscles = getMuscleGroups(exName);
+           if(muscles.some(m => ["Quads", "Glutes", "Lower Back", "Upper Back / Lats"].includes(m))) strengthSets++;
+           if(muscles.some(m => ["Hamstrings", "Hip Flexors", "Adductors"].includes(m))) mobilitySets++;
+        }
+      }
+      
+      let rpeSum = 0; let rpeCount = 0;
+      for (const val of Object.values(rpeData)) { rpeSum += parseInt(val); rpeCount++; }
+      const avgRPE = rpeCount > 0 ? (rpeSum / rpeCount).toFixed(1) : "0.0";
+
+      return { totalSetsAllTime, strengthSets, mobilitySets, enduranceSets, avgRPE };
+    }
+
+    function updateSkillTree() {
+      const stats = getTrackerAnalytics();
+      updateNodeState('str', 1, stats.strengthSets >= 10);
+      updateNodeState('str', 2, stats.strengthSets >= 30);
+      updateNodeState('str', 3, stats.strengthSets >= 60);
+
+      updateNodeState('mob', 1, stats.mobilitySets >= 10);
+      updateNodeState('mob', 2, stats.mobilitySets >= 30);
+      updateNodeState('mob', 3, stats.mobilitySets >= 60);
+
+      updateNodeState('cap', 1, stats.enduranceSets >= 20);
+      updateNodeState('cap', 2, stats.enduranceSets >= 50);
+      updateNodeState('cap', 3, stats.enduranceSets >= 100);
+    }
+
+    function updateNodeState(branch, level, isUnlocked) {
+      const node = document.getElementById(`node-${branch}-${level}`);
+      const line = document.getElementById(`line-${branch}-${level - 1}`); 
+      if(!node) return;
+
+      if (isUnlocked) {
+        if(branch === 'mob') {
+          node.className = "hex-node w-16 h-16 bg-[#0ac8b9]/10 border-2 border-[#0ac8b9] text-[#0ac8b9] hex-glow-cyan z-10 relative";
+          if(line) line.className = "tree-line bg-[#0ac8b9] hex-glow-cyan";
+        } else {
+          node.className = "hex-node w-16 h-16 bg-[#c89b3c]/10 border-2 border-[#c89b3c] text-[#c89b3c] hex-glow-gold z-10 relative";
+          if(line) line.className = "tree-line bg-[#c89b3c] hex-glow-gold";
+        }
+      } else {
+        node.className = "hex-node w-16 h-16 bg-[#010a13] border-2 border-[#1e2328] text-[#4a545c] z-10 relative";
+        if(line) line.className = "tree-line bg-[#1e2328]";
+      }
+    }
+
+    function updateGhostMode() {
+      const stats = getTrackerAnalytics();
+      const targetContractSets = parseInt(userSettings.contractDays || 3) * 15 * 4; 
+      const ghostSets = Math.round(targetContractSets * 0.6); 
+      const ghostRpe = "7.2";
+      const ghostCons = "60%";
+
+      const gSetsEl = document.getElementById('ghost-sets');
+      if(gSetsEl) gSetsEl.textContent = ghostSets;
+      const gConsEl = document.getElementById('ghost-consistency');
+      if(gConsEl) gConsEl.textContent = ghostCons;
+      const gRpeEl = document.getElementById('ghost-rpe');
+      if(gRpeEl) gRpeEl.textContent = ghostRpe;
+
+      const pSetsEl = document.getElementById('player-sets');
+      if(pSetsEl) pSetsEl.textContent = stats.totalSetsAllTime;
+      const pRpeEl = document.getElementById('player-rpe');
+      if(pRpeEl) pRpeEl.textContent = stats.avgRPE;
+      
+      const pCons = targetContractSets > 0 ? Math.min(100, Math.round((stats.totalSetsAllTime / targetContractSets) * 100)) : 0;
+      const pConsEl = document.getElementById('player-consistency');
+      if(pConsEl) pConsEl.textContent = `${pCons}%`;
+
+      if(pSetsEl) {
+        const playerPanel = pSetsEl.parentElement.parentElement;
+        if (stats.totalSetsAllTime >= ghostSets) {
+           playerPanel.classList.add('border-[#0ac8b9]', 'hex-glow-cyan');
+           playerPanel.classList.remove('border-[#e84057]', 'shadow-[0_0_15px_rgba(232,64,87,0.4)]');
+        } else {
+           playerPanel.classList.add('border-[#e84057]', 'shadow-[0_0_15px_rgba(232,64,87,0.4)]');
+           playerPanel.classList.remove('border-[#0ac8b9]', 'hex-glow-cyan');
+        }
+      }
     }
 
     function getBaseKey(exerciseName) {
@@ -916,7 +1318,7 @@
       let checkedSomething = false;
       let completedCount = 0;
 
-      for (let i = 0; i < ex.sets; i++) {
+      for (let i = 0; i < (ex.sets || 1); i++) {
         const key = getTrackKey(exerciseName, i);
         if (completedSets[key]) {
             completedCount++;
@@ -928,21 +1330,17 @@
         }
       }
       renderApp();
-      return { checked: checkedSomething, allDone: (completedCount === ex.sets) };
+      return { checked: checkedSomething, allDone: (completedCount === (ex.sets || 1)) };
     }
 
     function startExerciseTimer(seconds, exerciseName) {
       startTimer(seconds);
       const ex = getExerciseDetails(exerciseName);
-      
       if(ex) {
          const status = autoCheckNextSet(exerciseName);
-         
          if (status.allDone) {
              currentAutoExercise = null; 
-             if (status.checked) {
-                setTimeout(() => speakText("Exercise complete."), 1500);
-             }
+             if (status.checked) setTimeout(() => speakText("Exercise complete."), 1500);
          } else {
              currentAutoExercise = ex; 
          }
@@ -984,6 +1382,8 @@
               localStorage.setItem('10WeekTrackerData', JSON.stringify(completedSets));
               localStorage.setItem('10WeekRPEData', JSON.stringify(rpeData));
               renderApp();
+              updateSkillTree();
+              updateGhostMode();
               alert("Telemetry successfully restored.");
             } else {
               alert("System Error: Invalid file structure detected.");
@@ -1003,7 +1403,7 @@
       fullDayExercises.forEach(ex => {
         if (ex.type === 'static') return; 
         const targetMuscles = getMuscleGroups(ex.name);
-        for (let i = 0; i < ex.sets; i++) {
+        for (let i = 0; i < (ex.sets || 1); i++) {
           if (completedSets[getTrackKey(ex.name, i)]) {
             targetMuscles.forEach(m => { if (volumeData[m] !== undefined) volumeData[m]++; });
           }
@@ -1011,6 +1411,8 @@
       });
 
       const container = document.getElementById('volume-stats');
+      if(!container) return;
+      
       container.innerHTML = '';
       const order = ["Quads", "Hamstrings", "Glutes", "Adductors", "Hip Flexors", "Lower Back", "Upper Back / Lats", "Core", "Calves / Tibialis"];
       order.forEach(muscle => {
@@ -1030,23 +1432,31 @@
       
       let totalSets = 0; let completedSetsCount = 0;
       fullDayExercises.forEach(ex => {
-        totalSets += ex.sets;
-        for (let i = 0; i < ex.sets; i++) { if (completedSets[getTrackKey(ex.name, i)]) completedSetsCount++; }
+        const sets = ex.sets || 1;
+        totalSets += sets;
+        for (let i = 0; i < sets; i++) { if (completedSets[getTrackKey(ex.name, i)]) completedSetsCount++; }
       });
 
       const progressPercent = totalSets === 0 ? 0 : Math.round((completedSetsCount / totalSets) * 100);
-      document.getElementById('progress-text').textContent = `${completedSetsCount} of ${totalSets} sets resolved`;
+      const progTextEl = document.getElementById('progress-text');
+      if(progTextEl) progTextEl.textContent = `${completedSetsCount} of ${totalSets} sets resolved`;
       
       const bar = document.getElementById('progress-bar');
-      bar.style.width = `${progressPercent}%`;
+      if(bar) bar.style.width = `${progressPercent}%`;
       
-      if (progressPercent === 100 && totalSets > 0) {
-        document.getElementById('done-badge').classList.remove('hidden');
-        document.getElementById('done-badge').classList.add('flex');
-      } else {
-        document.getElementById('done-badge').classList.add('hidden');
-        document.getElementById('done-badge').classList.remove('flex');
+      const badge = document.getElementById('done-badge');
+      if(badge) {
+          if (progressPercent === 100 && totalSets > 0) {
+            badge.classList.remove('hidden');
+            badge.classList.add('flex');
+          } else {
+            badge.classList.add('hidden');
+            badge.classList.remove('flex');
+          }
       }
+      
+      updateSkillTree();
+      updateGhostMode();
     }
 
     function resetCurrentDay() {
@@ -1054,7 +1464,7 @@
         const dataNode = activeCategory === "Main Plan" ? workoutData["Main Plan"][activePhaseId] : workoutData[activeCategory];
         const exercises = dataNode[activeSubDay] || [];
         exercises.forEach(ex => { 
-            for (let i = 0; i < ex.sets; i++) { delete completedSets[getTrackKey(ex.name, i)]; } 
+            for (let i = 0; i < (ex.sets || 1); i++) { delete completedSets[getTrackKey(ex.name, i)]; } 
             delete rpeData[getBaseKey(ex.name)];
         });
         try { 
@@ -1105,8 +1515,8 @@
         btn.innerHTML = `<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> ABORT TEMPO`;
       }
 
-      let currentSetNum = ex.sets; 
-      for (let i = 0; i < ex.sets; i++) {
+      let currentSetNum = ex.sets || 1; 
+      for (let i = 0; i < currentSetNum; i++) {
         if (!completedSets[getTrackKey(ex.name, i)]) {
           currentSetNum = i + 1;
           break;
@@ -1127,8 +1537,8 @@
       const bot = ex.tempo[1];
       const con = ex.tempo[2];
       const top = ex.tempo[3];
-      const repsMatch = ex.reps.match(/(\d+)/g);
-      const reps = repsMatch ? Math.max(...repsMatch.map(Number)) : 15;
+      const repsMatch = ex.reps ? ex.reps.match(/(\d+)/g) : null;
+      const reps = repsMatch ? Math.max(...repsMatch.map(Number)) : 10;
 
       for (let r = 1; r <= reps; r++) {
          if (ecc > 0) { speechSequence.push("Down"); for(let i=2; i<=ecc; i++) speechSequence.push(i.toString()); }
@@ -1181,7 +1591,7 @@
           btn.classList.replace('text-[#010a13]', 'text-[#0ac8b9]');
           btn.classList.remove('animate-pulse');
           const origText = btn.getAttribute('data-orig-text');
-          btn.innerHTML = `<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> ` + origText;
+          if(origText) btn.innerHTML = `<svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> ` + origText;
         }
       }
       activeTempoButtonId = null;
@@ -1210,19 +1620,25 @@
     }
 
     function updateTimerUI() {
-      document.getElementById('timer-display').textContent = formatTime(timeLeft);
+      const timerDisplay = document.getElementById('timer-display');
+      if(timerDisplay) timerDisplay.textContent = formatTime(timeLeft);
+      
       const icon = document.getElementById('timer-icon');
-      if (timeLeft > 0) { icon.classList.add('text-[#c89b3c]', 'animate-pulse'); icon.classList.remove('text-[#4a545c]'); } 
-      else { icon.classList.remove('text-[#c89b3c]', 'animate-pulse'); icon.classList.add('text-[#4a545c]'); }
+      if(icon) {
+          if (timeLeft > 0) { icon.classList.add('text-[#c89b3c]', 'animate-pulse'); icon.classList.remove('text-[#4a545c]'); } 
+          else { icon.classList.remove('text-[#c89b3c]', 'animate-pulse'); icon.classList.add('text-[#4a545c]'); }
+      }
 
       const btn = document.getElementById('toggle-timer-btn');
       const playIcon = document.getElementById('play-icon'); const pauseIcon = document.getElementById('pause-icon');
       if (timerActive) {
-        btn.classList.replace('bg-[#0ac8b9]/10', 'bg-[#c89b3c]/10'); btn.classList.replace('text-[#0ac8b9]', 'text-[#c89b3c]'); btn.classList.replace('border-[#0ac8b9]', 'border-[#c89b3c]'); btn.classList.replace('hex-glow-cyan', 'hex-glow-gold');
-        playIcon.classList.add('hidden'); pauseIcon.classList.remove('hidden');
+        if(btn) { btn.classList.replace('bg-[#0ac8b9]/10', 'bg-[#c89b3c]/10'); btn.classList.replace('text-[#0ac8b9]', 'text-[#c89b3c]'); btn.classList.replace('border-[#0ac8b9]', 'border-[#c89b3c]'); btn.classList.replace('hex-glow-cyan', 'hex-glow-gold'); }
+        if(playIcon) playIcon.classList.add('hidden'); 
+        if(pauseIcon) pauseIcon.classList.remove('hidden');
       } else {
-        btn.classList.replace('bg-[#c89b3c]/10', 'bg-[#0ac8b9]/10'); btn.classList.replace('text-[#c89b3c]', 'text-[#0ac8b9]'); btn.classList.replace('border-[#c89b3c]', 'border-[#0ac8b9]'); btn.classList.replace('hex-glow-gold', 'hex-glow-cyan');
-        pauseIcon.classList.add('hidden'); playIcon.classList.remove('hidden');
+        if(btn) { btn.classList.replace('bg-[#c89b3c]/10', 'bg-[#0ac8b9]/10'); btn.classList.replace('text-[#c89b3c]', 'text-[#0ac8b9]'); btn.classList.replace('border-[#c89b3c]', 'border-[#0ac8b9]'); btn.classList.replace('hex-glow-gold', 'hex-glow-cyan'); }
+        if(pauseIcon) pauseIcon.classList.add('hidden'); 
+        if(playIcon) playIcon.classList.remove('hidden');
       }
     }
 
@@ -1260,9 +1676,7 @@
     function resetTimer() { 
       timerActive = false; 
       clearInterval(timerInterval); 
-      
       timeLeft = userSettings.defaultTimer ? parseInt(userSettings.defaultTimer) : 0; 
-      
       currentAutoExercise = null; 
       updateTimerUI(); 
     }
